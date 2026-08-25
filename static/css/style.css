@@ -303,7 +303,6 @@ body {
 /* ------------------------------------------------------------- Responsivo */
 
 @media (max-width: 720px) {
-  .navegacao { display: none; }
   .hero { padding: 60px 0 68px; }
   .busca { flex-direction: column; }
   .busca__botao { width: 100%; padding: 15px; }

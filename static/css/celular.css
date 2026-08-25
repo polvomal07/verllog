@@ -1,0 +1,258 @@
+/* ==========================================================================
+   Verllog Logística — ajustes para celular e tablet
+
+   Carregado por último, para poder corrigir o que os outros arquivos definem.
+   A referência de corte é 720px de largura.
+   ========================================================================== */
+
+/* ------------------------------------------------------------------------
+   Botão do menu (hambúrguer)
+   Fica escondido no desktop e só aparece quando o menu precisa colapsar.
+   ------------------------------------------------------------------------ */
+
+.menu-botao {
+  display: none;
+  flex-direction: column;
+  justify-content: center;
+  gap: 5px;
+  width: 44px;   /* 44px é o mínimo confortável para o dedo */
+  height: 44px;
+  padding: 0 10px;
+  border: 1px solid var(--borda);
+  border-radius: 10px;
+  background: var(--fundo);
+  cursor: pointer;
+}
+
+.menu-botao__risco {
+  display: block;
+  height: 2px;
+  width: 100%;
+  border-radius: 2px;
+  background: var(--cor-primaria);
+  transition: transform .2s ease, opacity .2s ease;
+}
+
+/* Vira um "X" quando o menu está aberto. */
+.menu-botao[aria-expanded="true"] .menu-botao__risco:nth-child(1) {
+  transform: translateY(7px) rotate(45deg);
+}
+.menu-botao[aria-expanded="true"] .menu-botao__risco:nth-child(2) {
+  opacity: 0;
+}
+.menu-botao[aria-expanded="true"] .menu-botao__risco:nth-child(3) {
+  transform: translateY(-7px) rotate(-45deg);
+}
+
+/* ==========================================================================
+   Até 720px
+   ========================================================================== */
+
+@media (max-width: 720px) {
+
+  /* ---------------------------------------------------------- Cabeçalho */
+
+  .container { padding: 0 18px; }
+
+  .cabecalho__conteudo {
+    flex-wrap: wrap;
+    min-height: 64px;
+  }
+
+  .menu-botao { display: flex; }
+
+  /* O menu deixa de ficar escondido: vira uma lista que abre abaixo do logo. */
+  .navegacao {
+    display: none;
+    flex-direction: column;
+    gap: 0;
+    width: 100%;
+    padding: 6px 0 12px;
+    border-top: 1px solid var(--borda);
+  }
+
+  .navegacao.aberto { display: flex; }
+
+  .navegacao a {
+    padding: 14px 2px;      /* área de toque generosa */
+    font-size: 1rem;
+    font-weight: 500;
+    color: var(--texto);
+    border-bottom: 1px solid var(--borda);
+  }
+
+  .navegacao a:last-child { border-bottom: 0; }
+
+  .logo__texto strong { font-size: 1.05rem; }
+
+  /* --------------------------------------------------------------- Hero */
+
+  .hero { padding: 46px 0 52px; }
+
+  .hero__titulo {
+    font-size: 1.85rem;
+    line-height: 1.18;
+    letter-spacing: -.02em;
+  }
+
+  /* A quebra de linha manual do título só faz sentido em tela larga. */
+  .hero__titulo br { display: none; }
+
+  .hero__subtitulo { font-size: 1rem; }
+
+  .hero__selo { font-size: .74rem; padding: 5px 12px; }
+
+  .hero__acoes { margin-top: 26px; gap: 10px; }
+
+  .botao-principal,
+  .botao-vazado { padding: 16px 24px; }
+
+  /* -------------------------------------------------------------- Busca */
+
+  .busca { padding: 8px; gap: 8px; }
+
+  .busca__campo {
+    padding: 14px 12px;
+    /* 16px evita que o iPhone dê zoom automático ao focar o campo. */
+    font-size: 16px;
+    letter-spacing: .02em;
+  }
+
+  .busca__botao { padding: 16px; font-size: .92rem; }
+
+  .busca__exemplo { font-size: .82rem; }
+  .busca__exemplo code { word-break: break-all; }
+
+  /* ------------------------------------------------------------- Seções */
+
+  .secao { padding: 44px 0; }
+  .secao__titulo { font-size: 1.4rem; }
+  .secao__texto { font-size: .96rem; }
+
+  .cartoes { gap: 14px; margin-top: 26px; }
+  .cartao { padding: 20px; }
+
+  .faixa { padding: 24px 0; }
+  .faixa__conteudo { grid-template-columns: repeat(2, 1fr); gap: 18px; }
+  .faixa__item strong { font-size: 1.6rem; }
+
+  .passos { gap: 14px; margin-top: 26px; }
+  .passo { padding: 20px; }
+
+  .numeros { grid-template-columns: repeat(2, 1fr); gap: 14px; }
+  .numero { padding: 20px 14px; }
+  .numero__valor { font-size: 1.75rem; }
+
+  .cabecalho-pagina__titulo { font-size: 1.75rem; }
+  .cabecalho-pagina__texto { font-size: 1rem; }
+
+  .chamada__conteudo { flex-direction: column; align-items: flex-start; }
+  .chamada__titulo { font-size: 1.35rem; }
+  .chamada .botao-principal { width: 100%; text-align: center; }
+
+  .ajuda { gap: 26px; }
+
+  /* ------------------------------------------------ Resultado do rastreio */
+
+  .resultado { padding: 34px 0 30px; }
+
+  .resultado__topo {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .resultado__codigo {
+    font-size: 1.35rem;
+    letter-spacing: .02em;
+    word-break: break-all;
+  }
+
+  .etiqueta { font-size: .74rem; padding: 8px 14px; }
+
+  .progresso { margin: 22px 0 24px; }
+
+  /* Duas colunas em vez de uma: aproveita melhor a largura do celular. */
+  .resumo {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+  }
+
+  .resumo__item dt { font-size: .68rem; }
+  .resumo__item dd { font-size: .92rem; }
+
+  /* ----------------------------------------------------------- Timeline */
+
+  .linha-tempo { margin-top: 24px; padding-left: 4px; }
+
+  .etapa { padding: 0 0 24px 24px; }
+
+  .etapa__marcador {
+    left: -8px;
+    width: 14px;
+    height: 14px;
+    border-width: 3px;
+  }
+
+  .etapa__status { font-size: .97rem; }
+  .etapa__quando { font-size: .82rem; }
+  .etapa__local { font-size: .9rem; }
+  .etapa__descricao { font-size: .85rem; }
+
+  .aguardando { margin-left: 24px; font-size: .85rem; }
+
+  .entrega { margin-top: 30px; padding: 20px; }
+
+  /* -------------------------------------------------------------- Rodapé */
+
+  .rodape { padding: 34px 0 22px; }
+  .rodape__conteudo { padding-bottom: 20px; }
+
+  /* --------------------------------------------------------------- Login */
+
+  .login { margin: 24px auto; padding: 26px 22px; }
+  .login__form input { font-size: 16px; }   /* evita o zoom do iPhone */
+  .login__form button { padding: 16px; }
+
+  /* --------------------------------------------------------------- Painel */
+
+  .painel__topo { margin-bottom: 22px; }
+  .painel__titulo { font-size: 1.35rem; }
+
+  .indicadores { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+  .indicador { padding: 16px 14px; }
+  .indicador__numero { font-size: 1.5rem; }
+  .indicador__rotulo { font-size: .76rem; }
+
+  .upload { flex-direction: column; align-items: stretch; }
+  .upload__arquivo { min-width: 0; }
+  .upload__botao { width: 100%; padding: 16px; }
+
+  .pesquisa { flex-wrap: wrap; }
+  .pesquisa input { font-size: 16px; padding: 13px; }
+  .pesquisa button { padding: 13px 20px; }
+
+  .relatorio__numeros { gap: 10px 18px; font-size: .86rem; }
+
+  /* A tabela rola na horizontal, com um empurrãozinho visual na borda. */
+  .tabela-rolagem {
+    -webkit-overflow-scrolling: touch;
+    margin: 0 -18px;
+    padding: 0 18px;
+  }
+
+  .tabela { font-size: .84rem; }
+  .tabela th, .tabela td { padding: 10px 8px; white-space: nowrap; }
+}
+
+/* ==========================================================================
+   Telas bem estreitas (até 380px)
+   ========================================================================== */
+
+@media (max-width: 380px) {
+  .hero__titulo { font-size: 1.6rem; }
+  .resumo { grid-template-columns: 1fr; }
+  .faixa__conteudo { grid-template-columns: 1fr 1fr; }
+  .indicadores { grid-template-columns: 1fr 1fr; }
+  .resultado__codigo { font-size: 1.15rem; }
+}

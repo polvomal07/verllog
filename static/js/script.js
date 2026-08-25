@@ -14,6 +14,43 @@ const PADRAO_CODIGO = /^[A-Z]{2}\d{12}[A-Z]$/;
 // Códigos antigos, aceitos enquanto ACEITAR_CODIGOS_LEGADOS estiver ligado.
 const PADRAO_LEGADO = /^[A-Z]{2}\d{8,20}[A-Z]?$/;
 
+/* ------------------------------------------------------------------ Menu
+   No celular o menu fica recolhido atrás do botão de três riscos. No
+   desktop ele está sempre visível e este código não faz diferença.
+   -------------------------------------------------------------------- */
+document.addEventListener("DOMContentLoaded", () => {
+  const botao = document.getElementById("menu-botao");
+  const navegacao = document.getElementById("navegacao");
+  if (!botao || !navegacao) return;
+
+  function fechar() {
+    navegacao.classList.remove("aberto");
+    botao.setAttribute("aria-expanded", "false");
+    botao.setAttribute("aria-label", "Abrir menu");
+  }
+
+  botao.addEventListener("click", () => {
+    const aberto = navegacao.classList.toggle("aberto");
+    botao.setAttribute("aria-expanded", aberto ? "true" : "false");
+    botao.setAttribute("aria-label", aberto ? "Fechar menu" : "Abrir menu");
+  });
+
+  // Fecha ao escolher um destino, ao apertar Esc e ao girar o aparelho.
+  navegacao.querySelectorAll("a").forEach((link) =>
+    link.addEventListener("click", fechar)
+  );
+
+  document.addEventListener("keydown", (evento) => {
+    if (evento.key === "Escape") fechar();
+  });
+
+  window.addEventListener("resize", () => {
+    if (window.innerWidth > 720) fechar();
+  });
+});
+
+
+/* ---------------------------------------------------- Busca de rastreio */
 document.addEventListener("DOMContentLoaded", () => {
   const formulario = document.getElementById("form-rastreio");
   if (!formulario) return;

@@ -11,6 +11,7 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/telas.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/landing.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/celular.css') }}">
 </head>
 <body>
 
@@ -29,7 +30,15 @@
         </span>
       </a>
 
-      <nav class="navegacao" aria-label="Navegação principal">
+      {# Só aparece em telas pequenas; no desktop o menu já está visível. #}
+      <button class="menu-botao" id="menu-botao" type="button"
+              aria-label="Abrir menu" aria-expanded="false" aria-controls="navegacao">
+        <span class="menu-botao__risco"></span>
+        <span class="menu-botao__risco"></span>
+        <span class="menu-botao__risco"></span>
+      </button>
+
+      <nav class="navegacao" id="navegacao" aria-label="Navegação principal">
         <a href="{{ url_for('publico.index') }}">Início</a>
         <a href="{{ url_for('publico.rastreamento') }}">Rastreamento</a>
         <a href="{{ url_for('publico.sobre') }}">Sobre nós</a>
