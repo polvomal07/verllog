@@ -8,7 +8,13 @@
 <section class="hero">
   <div class="container hero__conteudo">
     <p class="hero__selo">Operação em 32 países, 4 continentes</p>
-    <h1 class="hero__titulo">A operação logística<br>por trás da sua loja</h1>
+    {# Cada trecho é uma linha no desktop e emenda numa frase só no celular.
+       Usar <br> aqui daria problema: escondê-lo no celular grudava as
+       palavras ("logísticapor"). Com spans, o espaço entre eles permanece. #}
+    <h1 class="hero__titulo">
+      <span class="hero__linha">A operação logística</span>
+      <span class="hero__linha">por trás da sua loja</span>
+    </h1>
     <p class="hero__subtitulo">
       Somos o parceiro que transporta, movimenta e entrega os pedidos de
       lojas e e-commerces em 32 países, com rastreamento em cada etapa do

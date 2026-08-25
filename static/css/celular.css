@@ -95,8 +95,8 @@
     letter-spacing: -.02em;
   }
 
-  /* A quebra de linha manual do título só faz sentido em tela larga. */
-  .hero__titulo br { display: none; }
+  /* Em tela estreita o titulo vira texto corrido, sem quebra forcada. */
+  .hero__linha { display: inline; }
 
   .hero__subtitulo { font-size: 1rem; }
 
@@ -255,4 +255,50 @@
   .faixa__conteudo { grid-template-columns: 1fr 1fr; }
   .indicadores { grid-template-columns: 1fr 1fr; }
   .resultado__codigo { font-size: 1.15rem; }
+}
+
+/* ==========================================================================
+   Ajustes de texto: alinhamento e quebra de linha
+   ========================================================================== */
+
+/* Distribui as palavras entre as linhas em vez de deixar uma sozinha no fim.
+   Onde o navegador nao suporta, simplesmente ignora e nada quebra. */
+.hero__titulo,
+.busca-pagina__titulo,
+.cabecalho-pagina__titulo,
+.secao__titulo,
+.chamada__titulo,
+.painel__titulo {
+  text-wrap: balance;
+}
+
+/* Evita linha orfa (uma palavra sozinha no fim) nos paragrafos. */
+.hero__subtitulo,
+.secao__texto,
+.cabecalho-pagina__texto,
+.busca-pagina__texto,
+.cartao p,
+.passo p,
+.regiao p,
+.ajuda__item p {
+  text-wrap: pretty;
+}
+
+@media (max-width: 720px) {
+
+  /* Todos os itens da faixa comecam na mesma altura, mesmo quando um rotulo
+     ocupa duas linhas e o vizinho ocupa uma so. */
+  .faixa__conteudo,
+  .numeros,
+  .indicadores { align-items: start; }
+
+  /* Rotulos curtos o bastante para caber sem quebrar no meio da palavra. */
+  .faixa__item span,
+  .numero__rotulo { font-size: .8rem; line-height: 1.3; }
+
+  /* Nomes longos (Florianopolis/SC, Sao Jose da Barra/MG) nao estouram
+     a largura da tela na timeline e no resumo. */
+  .etapa__local,
+  .resultado__destino,
+  .resumo__item dd { overflow-wrap: anywhere; }
 }

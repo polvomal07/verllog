@@ -249,3 +249,7 @@
   .chamada { padding: 40px 0; }
   .busca-pagina { padding: 48px 0 44px; }
 }
+
+/* Cada trecho do titulo do hero vira uma linha propria no desktop.
+   No celular eles voltam a ser texto corrido (ver celular.css). */
+.hero__linha { display: block; }
