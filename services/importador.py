@@ -164,7 +164,14 @@ def _texto(valor):
 
 
 def _converter_data(valor):
-    """Aceita data do Excel, dd/mm/aaaa ou aaaa-mm-dd. Vazio vira a data de hoje."""
+    """
+    Aceita data do Excel, dd/mm/aaaa ou aaaa-mm-dd.
+
+    Devolve None quando a célula está vazia. Quem chama decide o que fazer com
+    isso: pedido novo ganha a data de hoje, pedido que já existe mantém a data
+    que tinha. Essa distinção é o que impede que reenviar uma planilha sem
+    coluna de data zere o progresso de todos os pedidos antigos.
+    """
     if isinstance(valor, datetime):
         return valor.date()
     if isinstance(valor, date):
@@ -172,7 +179,7 @@ def _converter_data(valor):
 
     texto = _texto(valor)
     if not texto:
-        return date.today()
+        return None
 
     for formato in ("%d/%m/%Y", "%Y-%m-%d", "%d-%m-%Y", "%d/%m/%y"):
         try:
@@ -358,25 +365,32 @@ def importar_planilha(caminho_arquivo, gerar_codigo_se_vazio=True):
             pedido = Pedido.query.filter_by(codigo_rastreio=codigo).first()
 
             if pedido is None:
+                # Pedido novo sem data na planilha entra com a data de hoje:
+                # é quando ele de fato passou a existir no sistema.
                 pedido = Pedido(
                     codigo_rastreio=codigo,
                     cliente_id=cliente.id,
-                    data_cadastro=data_cadastro,
+                    data_cadastro=data_cadastro or date.today(),
                 )
                 db.session.add(pedido)
                 db.session.flush()
                 _regravar_movimentacoes(pedido, cliente)
                 relatorio["adicionados"] += 1
             else:
+                # Pedido que já existe SÓ muda de data se a planilha trouxer
+                # uma. Sem isso, reenviar o arquivo completo (o jeito normal
+                # de trabalhar) jogaria todo mundo de volta para o dia zero.
+                data_final = data_cadastro or pedido.data_cadastro
+
                 destino_novo = cliente.cidade + "/" + cliente.estado
                 precisa_regravar = (
                     pedido.destino != destino_novo
-                    or pedido.data_cadastro != data_cadastro
+                    or pedido.data_cadastro != data_final
                     or not pedido.movimentacoes
                 )
 
                 pedido.cliente_id = cliente.id
-                pedido.data_cadastro = data_cadastro
+                pedido.data_cadastro = data_final
 
                 if precisa_regravar:
                     _regravar_movimentacoes(pedido, cliente)
