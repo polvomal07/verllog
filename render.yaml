@@ -1,16 +1,11 @@
 # Configuração da hospedagem no Render.
 #
-# Com este arquivo no repositório, o Render monta o site e o banco de dados
-# sozinho: basta apontar para o repositório e confirmar.
+# Com este arquivo no repositório, o Render monta o serviço sozinho: basta
+# apontar para o repositório e preencher as variáveis marcadas abaixo.
 #
-# O banco PostgreSQL fica SEPARADO do servidor do site. É isso que garante que
-# atualizar o código ou reiniciar o serviço não apague nenhum pedido.
-
-databases:
-  - name: verllog-banco
-    databaseName: verllog
-    user: verllog
-    plan: free
+# O banco de dados fica FORA do Render, no Neon (PostgreSQL gratuito e sem
+# prazo de validade). É isso que garante que atualizar o código, reiniciar o
+# serviço ou o site hibernar não apague nenhum pedido.
 
 services:
   - type: web
@@ -21,21 +16,19 @@ services:
     startCommand: gunicorn app:app --bind 0.0.0.0:$PORT --workers 2 --timeout 120
 
     envVars:
-      # Conexão com o banco acima, preenchida automaticamente pelo Render.
+      # Cole aqui a connection string do Neon (painel do Render, não no código).
       - key: DATABASE_URL
-        fromDatabase:
-          name: verllog-banco
-          property: connectionString
+        sync: false
 
-      # Chave de sessão, gerada pelo Render e nunca exposta no código.
-      - key: SECRET_KEY
-        generateValue: true
-
-      # Login do painel. Defina o valor no painel do Render, não aqui.
+      # Login do painel administrativo. Defina no painel do Render.
       - key: ADMIN_USUARIO
         sync: false
       - key: ADMIN_SENHA
         sync: false
+
+      # Chave de sessão, gerada pelo Render e nunca exposta no repositório.
+      - key: SECRET_KEY
+        generateValue: true
 
       # Sem isso o servidor roda em UTC e as datas do rastreio saem com
       # algumas horas de diferença do horário do Brasil.
