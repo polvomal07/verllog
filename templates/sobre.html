@@ -1,0 +1,172 @@
+{% extends "base.html" %}
+
+{% block titulo %}Sobre nós | {{ empresa.nome }}{% endblock %}
+
+{% block conteudo %}
+
+<section class="cabecalho-pagina">
+  <div class="container">
+    <p class="cabecalho-pagina__rotulo">Sobre nós</p>
+    <h1 class="cabecalho-pagina__titulo">O braço logístico de quem vende</h1>
+    <p class="cabecalho-pagina__texto">
+      A {{ empresa.nome }} é uma multinacional de transporte e distribuição
+      contratada por lojas e e-commerces. Operamos em quatro continentes,
+      levando o pedido do despacho até a porta do comprador.
+    </p>
+  </div>
+</section>
+
+<section class="secao">
+  <div class="container">
+    <div class="texto-duplo">
+      <div>
+        <h2 class="secao__titulo">Quem somos</h2>
+        <p class="secao__texto">
+          A {{ empresa.nome }} é uma empresa multinacional de logística
+          terceirizada, com matriz em Manaus e operações próprias na América
+          Latina, América do Norte, Europa e Ásia. Não vendemos produtos:
+          transportamos os pedidos de quem vende.
+        </p>
+        <p class="secao__texto">
+          Nossos clientes são lojas, marketplaces e e-commerces que precisam
+          entregar sem manter frota própria. Eles despacham, nós assumimos a
+          carga, e o comprador final acompanha tudo pelo código que a loja
+          envia por e-mail.
+        </p>
+        <p class="secao__texto">
+          Não somos uma operação apenas nacional: além da malha doméstica que
+          cobre todo o território brasileiro, movimentamos carga entre países
+          por via aérea, marítima e rodoviária, com desembaraço aduaneiro
+          conduzido por equipes próprias.
+        </p>
+      </div>
+      <div>
+        <h2 class="secao__titulo">Como trabalhamos</h2>
+        <p class="secao__texto">
+          O trajeto de cada encomenda é definido a partir do destino. Em rotas
+          domésticas, a carga sai do centro de origem, passa pela triagem
+          nacional e segue pelos centros regionais até a unidade responsável
+          pela cidade de entrega.
+        </p>
+        <p class="secao__texto">
+          Em rotas internacionais, entram no caminho os hubs de exportação, o
+          transporte de longo curso e o desembaraço no país de destino. Cada
+          uma dessas etapas fica registrada e visível para quem acompanha o
+          código de rastreamento.
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="secao secao--clara">
+  <div class="container">
+    <h2 class="secao__titulo">Nossa presença</h2>
+    <p class="secao__texto">
+      Uma malha construída para atravessar fronteiras sem perder o rastro da
+      encomenda.
+    </p>
+
+    <div class="numeros">
+      <div class="numero">
+        <span class="numero__valor">32</span>
+        <span class="numero__rotulo">Países com operação</span>
+      </div>
+      <div class="numero">
+        <span class="numero__valor">4</span>
+        <span class="numero__rotulo">Continentes</span>
+      </div>
+      <div class="numero">
+        <span class="numero__valor">120+</span>
+        <span class="numero__rotulo">Centros de distribuição</span>
+      </div>
+      <div class="numero">
+        <span class="numero__valor">100%</span>
+        <span class="numero__rotulo">Entregas rastreadas</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="secao">
+  <div class="container">
+    <h2 class="secao__titulo">Onde operamos</h2>
+    <p class="secao__texto">
+      Hubs internacionais conectando as principais rotas de comércio.
+    </p>
+
+    <div class="cartoes">
+      <article class="cartao">
+        <h3>América Latina</h3>
+        <p>
+          Brasil, Argentina, Chile, Colômbia, Peru, Uruguai e México, com malha
+          rodoviária integrada no Mercosul.
+        </p>
+      </article>
+      <article class="cartao">
+        <h3>América do Norte</h3>
+        <p>
+          Hubs em Miami, Nova York e Los Angeles atendendo Estados Unidos e
+          Canadá.
+        </p>
+      </article>
+      <article class="cartao">
+        <h3>Europa</h3>
+        <p>
+          Centros em Lisboa, Madri, Frankfurt e Roterdã, com distribuição para
+          toda a União Europeia.
+        </p>
+      </article>
+      <article class="cartao">
+        <h3>Ásia</h3>
+        <p>
+          Operação em Xangai, Shenzhen, Hong Kong e Dubai, conectando origens
+          asiáticas aos demais mercados.
+        </p>
+      </article>
+    </div>
+  </div>
+</section>
+
+<section class="secao secao--clara">
+  <div class="container">
+    <h2 class="secao__titulo">O que nos orienta</h2>
+
+    <div class="cartoes">
+      <article class="cartao">
+        <h3>Transparência</h3>
+        <p>
+          Cada etapa do trajeto fica registrada e acessível pelo código, do
+          país de origem até a porta do destinatário.
+        </p>
+      </article>
+      <article class="cartao">
+        <h3>Previsibilidade</h3>
+        <p>
+          O prazo é calculado a partir do destino no momento da postagem e
+          considera a distância real do trajeto, inclusive entre países.
+        </p>
+      </article>
+      <article class="cartao">
+        <h3>Cobertura</h3>
+        <p>
+          Operação própria em quatro continentes, sem depender de terceiros
+          nos principais corredores logísticos.
+        </p>
+      </article>
+      <article class="cartao">
+        <h3>Cuidado com a carga</h3>
+        <p>
+          Menos pontos de manuseio entre a coleta e a entrega significa menos
+          risco de avaria e menos tempo parado em triagem ou alfândega.
+        </p>
+      </article>
+    </div>
+
+    <p class="voltar">
+      <a href="{{ url_for('publico.rastreamento') }}">Rastrear uma encomenda &rarr;</a>
+    </p>
+  </div>
+</section>
+
+{% endblock %}

@@ -1,0 +1,46 @@
+# Configuração da hospedagem no Render.
+#
+# Com este arquivo no repositório, o Render monta o site e o banco de dados
+# sozinho: basta apontar para o repositório e confirmar.
+#
+# O banco PostgreSQL fica SEPARADO do servidor do site. É isso que garante que
+# atualizar o código ou reiniciar o serviço não apague nenhum pedido.
+
+databases:
+  - name: verllog-banco
+    databaseName: verllog
+    user: verllog
+    plan: free
+
+services:
+  - type: web
+    name: verllog
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn app:app --bind 0.0.0.0:$PORT --workers 2 --timeout 120
+
+    envVars:
+      # Conexão com o banco acima, preenchida automaticamente pelo Render.
+      - key: DATABASE_URL
+        fromDatabase:
+          name: verllog-banco
+          property: connectionString
+
+      # Chave de sessão, gerada pelo Render e nunca exposta no código.
+      - key: SECRET_KEY
+        generateValue: true
+
+      # Login do painel. Defina o valor no painel do Render, não aqui.
+      - key: ADMIN_USUARIO
+        sync: false
+      - key: ADMIN_SENHA
+        sync: false
+
+      # Sem isso o servidor roda em UTC e as datas do rastreio saem com
+      # algumas horas de diferença do horário do Brasil.
+      - key: TZ
+        value: America/Manaus
+
+      - key: PYTHON_VERSION
+        value: "3.12.10"

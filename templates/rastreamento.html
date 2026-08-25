@@ -1,0 +1,136 @@
+{% extends "base.html" %}
+
+{% block titulo %}
+  {% if encontrado %}Rastreio {{ dados.codigo }}{% else %}Código não encontrado{% endif %}
+  | {{ empresa.nome }}
+{% endblock %}
+
+{% block conteudo %}
+
+{% if not encontrado %}
+
+  {# ---------------------------------------------------------------
+     Código inexistente OU fora do padrão caem aqui, com a mesma
+     mensagem. Nada de erro técnico na cara do usuário.
+     --------------------------------------------------------------- #}
+  <section class="secao">
+    <div class="container">
+      <div class="vazio">
+        <svg class="vazio__icone" viewBox="0 0 48 48" aria-hidden="true">
+          <circle cx="24" cy="24" r="21" fill="none" stroke="currentColor" stroke-width="2.5"/>
+          <path d="M24 14v13" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
+          <circle cx="24" cy="33.5" r="2" fill="currentColor"/>
+        </svg>
+
+        <h1 class="vazio__titulo">Código de rastreamento não encontrado.</h1>
+        <p class="vazio__texto">
+          Verifique se o código foi digitado corretamente.
+        </p>
+
+        {% if codigo %}
+          <p class="vazio__codigo">Você pesquisou por <code>{{ codigo }}</code></p>
+        {% endif %}
+
+        <form class="vazio__busca" action="{{ url_for('publico.rastreamento') }}" method="get">
+          <label class="sr-apenas" for="codigo">Código de rastreamento</label>
+          <input class="vazio__campo" type="text" id="codigo" name="codigo"
+                 placeholder="BR263198595496D" maxlength="15"
+                 spellcheck="false" autocomplete="off" autofocus>
+          <button class="vazio__botao" type="submit">Rastrear</button>
+        </form>
+
+        <p class="vazio__dica">
+          O código tem 15 caracteres: <strong>BR</strong> + 12 números + 1 letra.
+        </p>
+      </div>
+    </div>
+  </section>
+
+{% else %}
+
+  {# --------------------------- Cabeçalho do resultado --------------------------- #}
+  <section class="resultado">
+    <div class="container">
+      <p class="resultado__rotulo">Pedido encontrado</p>
+
+      <div class="resultado__topo">
+        <div>
+          <h1 class="resultado__codigo">{{ dados.codigo }}</h1>
+          <p class="resultado__destino">Destino: {{ dados.destino }}</p>
+        </div>
+
+        <span class="etiqueta {% if dados.entregue %}etiqueta--entregue{% endif %}">
+          {{ dados.status }}
+        </span>
+      </div>
+
+      <div class="progresso" role="img"
+           aria-label="Entrega {{ dados.progresso }}% concluída">
+        <div class="progresso__barra" style="width: {{ dados.progresso }}%"></div>
+      </div>
+
+      <dl class="resumo">
+        <div class="resumo__item">
+          <dt>Destinatário</dt>
+          <dd>{{ dados.destinatario }}</dd>
+        </div>
+        <div class="resumo__item">
+          <dt>Origem</dt>
+          <dd>{{ dados.origem }}</dd>
+        </div>
+        <div class="resumo__item">
+          <dt>Postado em</dt>
+          <dd>{{ dados.data_cadastro }}</dd>
+        </div>
+      </dl>
+    </div>
+  </section>
+
+  {# --------------------------- Timeline --------------------------- #}
+  <section class="secao">
+    <div class="container">
+      <h2 class="secao__titulo">Histórico da encomenda</h2>
+
+      {# Só entram aqui os eventos que já aconteceram — a rota completa fica
+         restrita ao painel da operação. A ordem é do mais recente para o mais
+         antigo, como nas transportadoras. #}
+      <ol class="linha-tempo">
+        {% for etapa in dados.etapas %}
+          <li class="etapa etapa--concluida {% if etapa.atual %}etapa--atual{% endif %}">
+            <div class="etapa__marcador" aria-hidden="true"></div>
+
+            <div class="etapa__conteudo">
+              <p class="etapa__status">{{ etapa.status }}</p>
+              <p class="etapa__quando">{{ etapa.data }} às {{ etapa.hora }}</p>
+              <p class="etapa__local">{{ etapa.local }}</p>
+              <p class="etapa__descricao">{{ etapa.descricao }}</p>
+            </div>
+          </li>
+        {% endfor %}
+      </ol>
+
+      {% if not dados.entregue %}
+        <p class="aguardando">
+          Assim que houver uma nova movimentação, ela aparece aqui.
+        </p>
+      {% endif %}
+
+      <div class="entrega">
+        <h3>Endereço de entrega</h3>
+        <p>{{ dados.endereco }}</p>
+        <p>{{ dados.destino }}</p>
+        <p class="entrega__cpf">CPF: {{ dados.cpf }}</p>
+        <p class="entrega__nota">
+          Por segurança, o endereço e o CPF aparecem parcialmente ocultos.
+        </p>
+      </div>
+
+      <p class="voltar">
+        <a href="{{ url_for('publico.index') }}">Rastrear outro código</a>
+      </p>
+    </div>
+  </section>
+
+{% endif %}
+
+{% endblock %}

@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+
+{% block titulo %}Página não encontrada | {{ empresa.nome }}{% endblock %}
+
+{% block conteudo %}
+<section class="secao">
+  <div class="container">
+    <div class="vazio">
+      <h1 class="vazio__titulo">Página não encontrada.</h1>
+      <p class="vazio__texto">
+        {{ mensagem or "O endereço acessado não existe ou foi movido." }}
+      </p>
+      <p class="voltar">
+        <a href="{{ url_for('publico.index') }}">Voltar para a página inicial</a>
+      </p>
+    </div>
+  </div>
+</section>
+{% endblock %}

@@ -1,0 +1,311 @@
+/* ==========================================================================
+   Verllog Logística — identidade visual
+   Azul-marinho (confiança) + azul elétrico (movimento) + âmbar (destaque)
+   ========================================================================== */
+
+:root {
+  --cor-primaria: #0a2540;
+  --cor-primaria-clara: #123a63;
+  --cor-acento: #f5a524;
+  --cor-azul: #1668e3;
+  --cor-sucesso: #16a34a;
+  --cor-erro: #dc2626;
+
+  --texto: #0f1b2b;
+  --texto-suave: #5b6b7f;
+  --borda: #e2e8f0;
+  --fundo: #ffffff;
+  --fundo-suave: #f6f8fb;
+
+  --raio: 12px;
+  --sombra: 0 1px 2px rgba(10, 37, 64, .06), 0 8px 24px rgba(10, 37, 64, .08);
+  --largura: 1120px;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: "Inter", -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+  color: var(--texto);
+  background: var(--fundo);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+.container {
+  width: 100%;
+  max-width: var(--largura);
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+.sr-apenas {
+  position: absolute;
+  width: 1px; height: 1px;
+  padding: 0; margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+/* ---------------------------------------------------------------- Cabeçalho */
+
+.cabecalho {
+  background: var(--fundo);
+  border-bottom: 1px solid var(--borda);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.cabecalho__conteudo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  min-height: 72px;
+}
+
+.logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  color: var(--cor-primaria);
+}
+
+.logo__marca { width: 38px; height: 38px; display: block; }
+
+.logo__texto {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.05;
+}
+
+.logo__texto strong {
+  font-size: 1.15rem;
+  font-weight: 800;
+  letter-spacing: -.02em;
+}
+
+.logo__texto span {
+  font-size: .72rem;
+  font-weight: 500;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--texto-suave);
+}
+
+.navegacao {
+  display: flex;
+  gap: 28px;
+}
+
+.navegacao a {
+  color: var(--texto-suave);
+  text-decoration: none;
+  font-size: .94rem;
+  font-weight: 500;
+}
+
+.navegacao a:hover { color: var(--cor-azul); }
+
+/* --------------------------------------------------------------------- Hero */
+
+.hero {
+  background:
+    radial-gradient(900px 420px at 78% -12%, rgba(22, 104, 227, .5), transparent 62%),
+    linear-gradient(160deg, var(--cor-primaria) 0%, var(--cor-primaria-clara) 100%);
+  color: #fff;
+  padding: 88px 0 96px;
+}
+
+.hero__conteudo { max-width: 720px; }
+
+.hero__selo {
+  display: inline-block;
+  margin: 0 0 18px;
+  padding: 6px 14px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, .12);
+  border: 1px solid rgba(255, 255, 255, .18);
+  font-size: .8rem;
+  font-weight: 600;
+  letter-spacing: .04em;
+}
+
+.hero__titulo {
+  margin: 0 0 12px;
+  font-size: clamp(2rem, 5vw, 3.1rem);
+  font-weight: 800;
+  letter-spacing: -.03em;
+  line-height: 1.1;
+}
+
+.hero__subtitulo {
+  margin: 0 0 32px;
+  font-size: 1.1rem;
+  color: rgba(255, 255, 255, .82);
+}
+
+/* ------------------------------------------------------------------- Busca */
+
+.busca {
+  display: flex;
+  gap: 10px;
+  background: #fff;
+  padding: 10px;
+  border-radius: var(--raio);
+  box-shadow: var(--sombra);
+}
+
+.busca__campo {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  padding: 14px 16px;
+  font-size: 1rem;
+  font-family: inherit;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  color: var(--texto);
+  background: transparent;
+}
+
+.busca__campo::placeholder {
+  text-transform: none;
+  letter-spacing: normal;
+  color: #93a2b5;
+}
+
+.busca__campo:focus { outline: 2px solid var(--cor-azul); outline-offset: 2px; border-radius: 8px; }
+
+.busca__botao {
+  border: 0;
+  border-radius: 9px;
+  padding: 14px 26px;
+  background: var(--cor-acento);
+  color: #23180a;
+  font-family: inherit;
+  font-size: .95rem;
+  font-weight: 700;
+  letter-spacing: .02em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: filter .15s ease;
+}
+
+.busca__botao:hover { filter: brightness(1.06); }
+
+.busca__exemplo {
+  margin: 14px 0 0;
+  font-size: .88rem;
+  color: rgba(255, 255, 255, .7);
+}
+
+.busca__exemplo code {
+  font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
+  background: rgba(255, 255, 255, .12);
+  padding: 2px 7px;
+  border-radius: 5px;
+  letter-spacing: .05em;
+}
+
+.busca__aviso {
+  margin: 12px 0 0;
+  min-height: 1.4em;
+  font-size: .9rem;
+  font-weight: 500;
+  color: var(--cor-acento);
+}
+
+/* ------------------------------------------------------------------ Seções */
+
+.secao { padding: 72px 0; }
+.secao--clara { background: var(--fundo-suave); }
+
+.secao__titulo {
+  margin: 0 0 12px;
+  font-size: 1.75rem;
+  font-weight: 700;
+  letter-spacing: -.02em;
+}
+
+.secao__texto {
+  margin: 0;
+  max-width: 640px;
+  color: var(--texto-suave);
+}
+
+.cartoes {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 20px;
+  margin-top: 36px;
+}
+
+.cartao {
+  background: var(--fundo);
+  border: 1px solid var(--borda);
+  border-radius: var(--raio);
+  padding: 24px;
+}
+
+.cartao h3 {
+  margin: 0 0 8px;
+  font-size: 1.05rem;
+  font-weight: 700;
+}
+
+.cartao p {
+  margin: 0;
+  font-size: .94rem;
+  color: var(--texto-suave);
+}
+
+.contato {
+  margin: 20px 0 0;
+  padding: 0;
+  list-style: none;
+  color: var(--texto-suave);
+}
+
+.contato li { margin-bottom: 6px; }
+
+/* ------------------------------------------------------------------ Rodapé */
+
+.rodape {
+  background: var(--cor-primaria);
+  color: rgba(255, 255, 255, .78);
+  padding: 48px 0 28px;
+}
+
+.rodape__conteudo {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 24px;
+  padding-bottom: 26px;
+  border-bottom: 1px solid rgba(255, 255, 255, .12);
+}
+
+.rodape p { margin: 0 0 4px; font-size: .92rem; }
+
+.rodape__marca { color: #fff; font-weight: 700; font-size: 1.05rem !important; }
+
+.rodape__aviso {
+  margin-top: 22px !important;
+  font-size: .82rem !important;
+  color: rgba(255, 255, 255, .55);
+}
+
+/* ------------------------------------------------------------- Responsivo */
+
+@media (max-width: 720px) {
+  .navegacao { display: none; }
+  .hero { padding: 60px 0 68px; }
+  .busca { flex-direction: column; }
+  .busca__botao { width: 100%; padding: 15px; }
+  .secao { padding: 52px 0; }
+}

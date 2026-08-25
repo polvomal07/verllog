@@ -1,0 +1,20 @@
+# Ambiente virtual
+.venv/
+venv/
+
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# Banco de dados local
+database.db
+*.sqlite3
+
+# Planilhas enviadas pelo painel
+uploads/*
+!uploads/.gitkeep
+
+# Sistema
+.DS_Store
+Thumbs.db

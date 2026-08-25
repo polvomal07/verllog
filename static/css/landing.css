@@ -1,0 +1,251 @@
+/* ==========================================================================
+   Verllog Logística — landing page (home) e página de rastreamento
+   ========================================================================== */
+
+/* ------------------------------------------------------------ Botões do hero */
+
+.hero__acoes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 34px;
+}
+
+.botao-principal {
+  display: inline-block;
+  padding: 15px 32px;
+  border-radius: 10px;
+  background: var(--cor-acento);
+  color: #23180a;
+  text-decoration: none;
+  font-size: .95rem;
+  font-weight: 700;
+  letter-spacing: .02em;
+  text-transform: uppercase;
+  transition: filter .15s ease;
+}
+
+.botao-principal:hover { filter: brightness(1.06); }
+
+.botao-vazado {
+  display: inline-block;
+  padding: 15px 32px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, .34);
+  color: #fff;
+  text-decoration: none;
+  font-size: .95rem;
+  font-weight: 600;
+  transition: background .15s ease;
+}
+
+.botao-vazado:hover { background: rgba(255, 255, 255, .1); }
+
+/* ------------------------------------------------------------ Faixa de números */
+
+.faixa {
+  background: var(--fundo-suave);
+  border-bottom: 1px solid var(--borda);
+  padding: 30px 0;
+}
+
+.faixa__conteudo {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 22px;
+  text-align: center;
+}
+
+.faixa__item strong {
+  display: block;
+  font-size: 1.9rem;
+  font-weight: 800;
+  letter-spacing: -.03em;
+  color: var(--cor-primaria);
+  line-height: 1.1;
+}
+
+.faixa__item span {
+  display: block;
+  margin-top: 4px;
+  font-size: .86rem;
+  color: var(--texto-suave);
+}
+
+/* ------------------------------------------------------------ Rótulo de seção */
+
+.secao__rotulo {
+  margin: 0 0 10px;
+  font-size: .76rem;
+  font-weight: 700;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--cor-azul);
+}
+
+/* ------------------------------------------------------------ Ícone do cartão */
+
+.cartao__icone {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  margin-bottom: 16px;
+  border-radius: 11px;
+  background: rgba(22, 104, 227, .09);
+  color: var(--cor-azul);
+}
+
+.cartao__icone svg { width: 23px; height: 23px; }
+
+/* ------------------------------------------------------------ Passos */
+
+.passos {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: 22px;
+  margin: 36px 0 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: passo;
+}
+
+.passo {
+  position: relative;
+  padding: 26px 22px 24px;
+  background: var(--fundo);
+  border: 1px solid var(--borda);
+  border-radius: var(--raio);
+}
+
+.passo__numero {
+  display: block;
+  margin-bottom: 12px;
+  font-size: .95rem;
+  font-weight: 800;
+  letter-spacing: .06em;
+  color: var(--cor-acento);
+}
+
+.passo h3 { margin: 0 0 8px; font-size: 1.05rem; font-weight: 700; }
+.passo p  { margin: 0; font-size: .93rem; color: var(--texto-suave); }
+
+/* ------------------------------------------------------------ Regiões */
+
+.regioes {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: 0;
+  margin-top: 34px;
+  border: 1px solid var(--borda);
+  border-radius: var(--raio);
+  overflow: hidden;
+}
+
+.regiao {
+  padding: 26px 24px;
+  border-right: 1px solid var(--borda);
+}
+
+.regiao:last-child { border-right: 0; }
+
+.regiao h3 {
+  margin: 0 0 8px;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--cor-primaria);
+}
+
+.regiao p { margin: 0; font-size: .9rem; color: var(--texto-suave); }
+
+/* ------------------------------------------------------------ Chamada final */
+
+.chamada {
+  background: var(--cor-primaria);
+  color: #fff;
+  padding: 52px 0;
+}
+
+.chamada__conteudo {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 22px;
+}
+
+.chamada__titulo {
+  margin: 0 0 6px;
+  font-size: 1.6rem;
+  font-weight: 700;
+  letter-spacing: -.02em;
+}
+
+.chamada__texto { margin: 0; color: rgba(255, 255, 255, .78); }
+
+/* ==========================================================================
+   Página de rastreamento (formulário)
+   ========================================================================== */
+
+.busca-pagina {
+  background:
+    radial-gradient(900px 400px at 80% -20%, rgba(22, 104, 227, .45), transparent 62%),
+    linear-gradient(160deg, var(--cor-primaria) 0%, var(--cor-primaria-clara) 100%);
+  color: #fff;
+  padding: 66px 0 60px;
+}
+
+.busca-pagina__conteudo { max-width: 700px; }
+
+.busca-pagina__titulo {
+  margin: 0 0 12px;
+  font-size: clamp(1.9rem, 4.6vw, 2.7rem);
+  font-weight: 800;
+  letter-spacing: -.03em;
+  line-height: 1.12;
+}
+
+.busca-pagina__texto {
+  margin: 0 0 30px;
+  font-size: 1.05rem;
+  color: rgba(255, 255, 255, .82);
+}
+
+/* ------------------------------------------------------------ Perguntas */
+
+.ajuda {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 30px 44px;
+}
+
+.ajuda__item h2 {
+  margin: 0 0 8px;
+  font-size: 1.05rem;
+  font-weight: 700;
+  letter-spacing: -.01em;
+}
+
+.ajuda__item p { margin: 0; font-size: .94rem; color: var(--texto-suave); }
+
+.ajuda__item code {
+  font-family: ui-monospace, Consolas, monospace;
+  background: var(--fundo-suave);
+  border: 1px solid var(--borda);
+  padding: 1px 6px;
+  border-radius: 5px;
+  font-size: .88rem;
+}
+
+/* ------------------------------------------------------------- Responsivo */
+
+@media (max-width: 720px) {
+  .hero__acoes { flex-direction: column; }
+  .botao-principal,
+  .botao-vazado { text-align: center; }
+  .regiao { border-right: 0; border-bottom: 1px solid var(--borda); }
+  .regiao:last-child { border-bottom: 0; }
+  .chamada { padding: 40px 0; }
+  .busca-pagina { padding: 48px 0 44px; }
+}

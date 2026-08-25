@@ -1,0 +1,213 @@
+{% extends "base.html" %}
+
+{% block titulo %}{{ empresa.nome }} | Logística internacional{% endblock %}
+
+{% block conteudo %}
+
+{# --------------------------------------------------------------- Hero #}
+<section class="hero">
+  <div class="container hero__conteudo">
+    <p class="hero__selo">Operação em 32 países, 4 continentes</p>
+    <h1 class="hero__titulo">A operação logística<br>por trás da sua loja</h1>
+    <p class="hero__subtitulo">
+      Somos o parceiro que transporta, movimenta e entrega os pedidos de
+      lojas e e-commerces em 32 países, com rastreamento em cada etapa do
+      trajeto, do despacho à assinatura do destinatário.
+    </p>
+
+    <div class="hero__acoes">
+      <a class="botao-principal" href="{{ url_for('publico.rastreamento') }}">
+        Rastrear encomenda
+      </a>
+      <a class="botao-vazado" href="{{ url_for('publico.sobre') }}">
+        Conheça a {{ empresa.nome }}
+      </a>
+    </div>
+  </div>
+</section>
+
+{# ------------------------------------------------------------- Números #}
+<section class="faixa">
+  <div class="container faixa__conteudo">
+    <div class="faixa__item">
+      <strong>32</strong>
+      <span>países com operação</span>
+    </div>
+    <div class="faixa__item">
+      <strong>4</strong>
+      <span>continentes</span>
+    </div>
+    <div class="faixa__item">
+      <strong>120+</strong>
+      <span>centros de distribuição</span>
+    </div>
+    <div class="faixa__item">
+      <strong>100%</strong>
+      <span>entregas rastreadas</span>
+    </div>
+  </div>
+</section>
+
+{# ------------------------------------------------------------- Serviços #}
+<section class="secao">
+  <div class="container">
+    <p class="secao__rotulo">Nossos serviços</p>
+    <h2 class="secao__titulo">Uma operação de ponta a ponta</h2>
+    <p class="secao__texto">
+      A loja vende e despacha. A partir daí, a carga é nossa: coleta,
+      transferência internacional, armazenagem e entrega final, sem repassar o
+      pedido para intermediários nos principais corredores.
+    </p>
+
+    <div class="cartoes">
+      <article class="cartao">
+        <span class="cartao__icone" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+               stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="9"/>
+            <path d="M3 12h18M12 3a15 15 0 0 1 0 18a15 15 0 0 1 0-18"/>
+          </svg>
+        </span>
+        <h3>Transporte internacional</h3>
+        <p>
+          Modais aéreo, marítimo e rodoviário entre os principais mercados,
+          com desembaraço aduaneiro por equipe própria.
+        </p>
+      </article>
+
+      <article class="cartao">
+        <span class="cartao__icone" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+               stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 17V7l6-3 6 3 6-3v10l-6 3-6-3-6 3z"/>
+            <path d="M9 4v10M15 7v10"/>
+          </svg>
+        </span>
+        <h3>Distribuição nacional</h3>
+        <p>
+          Malha de transferência ligando a matriz em Manaus aos centros
+          regionais de todo o território brasileiro.
+        </p>
+      </article>
+
+      <article class="cartao">
+        <span class="cartao__icone" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+               stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 9l9-6 9 6v11a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1z"/>
+            <path d="M8 21v-8h8v8"/>
+          </svg>
+        </span>
+        <h3>Armazenagem</h3>
+        <p>
+          Estrutura de estoque nos centros de distribuição, com posições
+          alfandegadas na Zona Franca de Manaus.
+        </p>
+      </article>
+
+      <article class="cartao">
+        <span class="cartao__icone" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+               stroke-linecap="round" stroke-linejoin="round">
+            <path d="M1 6h13v9H1zM14 9h4l3 3v3h-7z"/>
+            <circle cx="5.5" cy="18" r="2"/>
+            <circle cx="17.5" cy="18" r="2"/>
+          </svg>
+        </span>
+        <h3>Última milha</h3>
+        <p>
+          Equipes de entrega local em cada mercado, com confirmação de
+          recebimento registrada no rastreamento.
+        </p>
+      </article>
+    </div>
+  </div>
+</section>
+
+{# ---------------------------------------------------------- Como funciona #}
+<section class="secao secao--clara">
+  <div class="container">
+    <p class="secao__rotulo">Como funciona</p>
+    <h2 class="secao__titulo">Do embarque à entrega em quatro movimentos</h2>
+
+    <ol class="passos">
+      <li class="passo">
+        <span class="passo__numero">01</span>
+        <h3>Despacho da loja</h3>
+        <p>
+          A loja parceira posta o pedido, a carga entra na malha pela matriz em
+          Manaus e recebe um código de rastreamento único, que a loja repassa
+          ao comprador por e-mail.
+        </p>
+      </li>
+      <li class="passo">
+        <span class="passo__numero">02</span>
+        <h3>Triagem</h3>
+        <p>
+          O destino define a rota. O sistema escolhe o corredor e os centros
+          por onde a encomenda vai passar.
+        </p>
+      </li>
+      <li class="passo">
+        <span class="passo__numero">03</span>
+        <h3>Transferência</h3>
+        <p>
+          A carga avança entre os centros de distribuição, com cada chegada
+          registrada no histórico.
+        </p>
+      </li>
+      <li class="passo">
+        <span class="passo__numero">04</span>
+        <h3>Entrega</h3>
+        <p>
+          A unidade local recebe o pacote, sai para entrega e confirma o
+          recebimento pelo destinatário.
+        </p>
+      </li>
+    </ol>
+  </div>
+</section>
+
+{# ------------------------------------------------------------- Cobertura #}
+<section class="secao">
+  <div class="container">
+    <p class="secao__rotulo">Cobertura</p>
+    <h2 class="secao__titulo">Presença nos principais corredores</h2>
+
+    <div class="regioes">
+      <div class="regiao">
+        <h3>América Latina</h3>
+        <p>Brasil, Argentina, Chile, Colômbia, Peru, Uruguai e México</p>
+      </div>
+      <div class="regiao">
+        <h3>América do Norte</h3>
+        <p>Miami, Nova York, Los Angeles e Toronto</p>
+      </div>
+      <div class="regiao">
+        <h3>Europa</h3>
+        <p>Lisboa, Madri, Frankfurt e Roterdã</p>
+      </div>
+      <div class="regiao">
+        <h3>Ásia</h3>
+        <p>Xangai, Shenzhen, Hong Kong e Dubai</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+{# ------------------------------------------------------------ Chamada final #}
+<section class="chamada">
+  <div class="container chamada__conteudo">
+    <div>
+      <h2 class="chamada__titulo">Recebeu um código da loja?</h2>
+      <p class="chamada__texto">
+        Acompanhe cada movimentação da sua encomenda em tempo real.
+      </p>
+    </div>
+    <a class="botao-principal" href="{{ url_for('publico.rastreamento') }}">
+      Rastrear agora
+    </a>
+  </div>
+</section>
+
+{% endblock %}

@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+
+{% block titulo %}Rastreamento | {{ empresa.nome }}{% endblock %}
+
+{% block conteudo %}
+
+<section class="busca-pagina">
+  <div class="container busca-pagina__conteudo">
+    <p class="cabecalho-pagina__rotulo">Rastreamento</p>
+    <h1 class="busca-pagina__titulo">Rastreie sua encomenda</h1>
+    <p class="busca-pagina__texto">
+      Informe o código que a loja enviou por e-mail para acompanhar o status
+      da entrega.
+    </p>
+
+    <form class="busca" id="form-rastreio" action="{{ url_for('publico.rastreamento') }}"
+          method="get" autocomplete="off">
+      <label class="sr-apenas" for="codigo">Código de rastreamento</label>
+      <input
+        class="busca__campo"
+        type="text"
+        id="codigo"
+        name="codigo"
+        placeholder="Digite seu código de rastreamento"
+        maxlength="15"
+        spellcheck="false"
+        autofocus>
+      <button class="busca__botao" type="submit">Rastrear pedido</button>
+    </form>
+
+    <p class="busca__exemplo">Exemplo: <code>BR263198595496D</code></p>
+    <p class="busca__aviso" id="busca-aviso" role="status"></p>
+  </div>
+</section>
+
+<section class="secao">
+  <div class="container">
+    <div class="ajuda">
+      <article class="ajuda__item">
+        <h2>Onde encontro meu código?</h2>
+        <p>
+          A {{ empresa.nome }} transporta encomendas para lojas parceiras, e é
+          a <strong>loja onde você comprou</strong> que envia o código de
+          rastreamento por e-mail assim que despacha o pedido. Procure pelo
+          e-mail de confirmação de envio. O código costuma vir no assunto ou
+          logo no início da mensagem.
+        </p>
+      </article>
+
+      <article class="ajuda__item">
+        <h2>Como é o formato do código?</h2>
+        <p>
+          São 15 caracteres: <strong>duas letras</strong>, seguidas de
+          <strong>12 números</strong> e <strong>uma letra</strong> no final.
+        </p>
+      </article>
+
+      <article class="ajuda__item">
+        <h2>Meu código não foi encontrado</h2>
+        <p>
+          Confira se todos os caracteres foram digitados corretamente. Códigos
+          emitidos há poucas horas podem levar até um dia útil para aparecer na
+          consulta, porque o pedido só entra na malha quando chega ao nosso
+          centro de recebimento.
+        </p>
+      </article>
+
+      <article class="ajuda__item">
+        <h2>Não recebi nenhum código</h2>
+        <p>
+          Nesse caso, fale com a loja onde você fez a compra. A emissão do
+          código acontece no momento do despacho, e só a loja pode confirmar se
+          o pedido já foi postado.
+        </p>
+      </article>
+
+      <article class="ajuda__item">
+        <h2>Com que frequência atualiza?</h2>
+        <p>
+          O histórico é atualizado a cada nova movimentação registrada nos
+          centros de distribuição. Etapas futuras não aparecem. Você vê apenas
+          o que já aconteceu com a sua encomenda.
+        </p>
+      </article>
+
+      <article class="ajuda__item">
+        <h2>O que significa cada status?</h2>
+        <p>
+          <strong>Pedido recebido</strong> é a entrada na malha;
+          <strong>em transferência</strong> indica trajeto entre centros;
+          <strong>saiu para entrega</strong> significa que a encomenda está
+          com o entregador.
+        </p>
+      </article>
+    </div>
+  </div>
+</section>
+
+{% endblock %}

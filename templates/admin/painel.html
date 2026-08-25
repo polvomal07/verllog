@@ -1,0 +1,171 @@
+{% extends "base.html" %}
+
+{% block titulo %}Painel administrativo | {{ empresa.nome }}{% endblock %}
+
+{% block conteudo %}
+<section class="secao painel">
+  <div class="container">
+
+    <div class="painel__topo">
+      <div>
+        <h1 class="painel__titulo">Painel administrativo</h1>
+        <p class="painel__subtitulo">Operação {{ empresa.nome }}</p>
+      </div>
+      <a class="botao-secundario" href="{{ url_for('admin.logout') }}">Sair</a>
+    </div>
+
+    {# --------------------------- Indicadores --------------------------- #}
+    <div class="indicadores">
+      <div class="indicador">
+        <span class="indicador__numero">{{ estatisticas.total }}</span>
+        <span class="indicador__rotulo">Total de pedidos</span>
+      </div>
+      <div class="indicador">
+        <span class="indicador__numero">{{ estatisticas.em_transito }}</span>
+        <span class="indicador__rotulo">Em trânsito</span>
+      </div>
+      <div class="indicador">
+        <span class="indicador__numero">{{ estatisticas.em_transferencia }}</span>
+        <span class="indicador__rotulo">Em transferência</span>
+      </div>
+      <div class="indicador">
+        <span class="indicador__numero">{{ estatisticas.saiu_para_entrega }}</span>
+        <span class="indicador__rotulo">Saiu para entrega</span>
+      </div>
+      <div class="indicador indicador--sucesso">
+        <span class="indicador__numero">{{ estatisticas.entregues }}</span>
+        <span class="indicador__rotulo">Entregues</span>
+      </div>
+      <div class="indicador">
+        <span class="indicador__numero">{{ estatisticas.novos_hoje }}</span>
+        <span class="indicador__rotulo">Novos hoje</span>
+      </div>
+    </div>
+
+    {# --------------------------- Importação --------------------------- #}
+    <div class="bloco">
+      <h2 class="bloco__titulo">Importar nova planilha</h2>
+      <p class="bloco__texto">
+        Aceita <strong>.xlsx</strong>, <strong>.xls</strong> e <strong>.csv</strong>.
+        Reenviar o mesmo arquivo não duplica nada: o código de rastreio é a chave,
+        então registros conhecidos são atualizados e só os novos entram.
+      </p>
+
+      <form class="upload" method="post" enctype="multipart/form-data"
+            action="{{ url_for('admin.importar') }}">
+        <input class="upload__arquivo" type="file" name="planilha"
+               accept=".xlsx,.xls,.csv" required>
+        <button class="upload__botao" type="submit">Importar</button>
+      </form>
+
+      {% if relatorio %}
+        <div class="relatorio">
+          <h3 class="relatorio__titulo">
+            Resultado da importação: {{ relatorio.arquivo }}
+          </h3>
+
+          <div class="relatorio__numeros">
+            <span>Linhas lidas: <strong>{{ relatorio.total_linhas }}</strong></span>
+            <span class="ok">Adicionados: <strong>{{ relatorio.adicionados }}</strong></span>
+            <span class="aten">Atualizados: <strong>{{ relatorio.atualizados }}</strong></span>
+            <span class="err">Com erro: <strong>{{ relatorio.erros|length }}</strong></span>
+          </div>
+
+          {% if relatorio.codigos_gerados %}
+            <p class="relatorio__gerados">
+              Códigos gerados automaticamente: {{ relatorio.codigos_gerados|length }}
+              {{ relatorio.codigos_gerados[:5]|join(', ') }}{% if relatorio.codigos_gerados|length > 5 %}…{% endif %}
+            </p>
+          {% endif %}
+
+          {% if relatorio.erros %}
+            <table class="tabela tabela--erros">
+              <thead>
+                <tr><th>Linha</th><th>Código</th><th>Motivo</th></tr>
+              </thead>
+              <tbody>
+                {% for erro in relatorio.erros %}
+                  <tr>
+                    <td>{{ erro.linha }}</td>
+                    <td><code>{{ erro.codigo }}</code></td>
+                    <td>{{ erro.motivo }}</td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          {% endif %}
+        </div>
+      {% endif %}
+    </div>
+
+    {# --------------------------- Pedidos --------------------------- #}
+    <div class="bloco">
+      <div class="bloco__cabecalho">
+        <h2 class="bloco__titulo">Pedidos</h2>
+        <form class="pesquisa" method="get">
+          <input type="text" name="busca" value="{{ busca }}"
+                 placeholder="Código, cliente, cidade ou status">
+          <button type="submit">Pesquisar</button>
+          {% if busca %}
+            <a class="pesquisa__limpar" href="{{ url_for('admin.painel') }}">limpar</a>
+          {% endif %}
+        </form>
+      </div>
+
+      {% if pedidos %}
+        <div class="tabela-rolagem">
+          <table class="tabela">
+            <thead>
+              <tr>
+                <th>Código</th>
+                <th>Cliente</th>
+                <th>Cidade</th>
+                <th>UF</th>
+                <th>Status</th>
+                <th>Cadastro</th>
+                <th>Previsão</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for pedido in pedidos %}
+                <tr>
+                  <td><code>{{ pedido.codigo_rastreio }}</code></td>
+                  <td>{{ pedido.cliente.nome }}</td>
+                  <td>{{ pedido.cliente.cidade }}</td>
+                  <td>{{ pedido.cliente.estado }}</td>
+                  <td>
+                    <span class="etiqueta etiqueta--pequena
+                      {% if pedido.entregue %}etiqueta--entregue{% endif %}">
+                      {{ pedido.status_atual }}
+                    </span>
+                  </td>
+                  <td>{{ pedido.data_cadastro.strftime('%d/%m/%Y') }}</td>
+                  <td>
+                    {% if pedido.previsao_entrega %}
+                      {{ pedido.previsao_entrega.strftime('%d/%m/%Y') }}
+                    {% else %}não definida{% endif %}
+                  </td>
+                  <td>
+                    <a class="link-tabela"
+                       href="{{ url_for('admin.detalhe_pedido', codigo=pedido.codigo_rastreio) }}">ver</a>
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% else %}
+        <p class="bloco__texto">
+          {% if busca %}
+            Nenhum pedido encontrado para "{{ busca }}".
+          {% else %}
+            Nenhum pedido cadastrado ainda. Importe uma planilha acima.
+          {% endif %}
+        </p>
+      {% endif %}
+    </div>
+
+  </div>
+</section>
+{% endblock %}

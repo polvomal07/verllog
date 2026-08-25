@@ -1,0 +1,28 @@
+# Verllog Logistica - dependencias do projeto
+# Instalar com: pip install -r requirements.txt
+
+# --- Backend / web ---
+Flask>=3.0,<4.0
+Flask-SQLAlchemy>=3.1,<4.0
+SQLAlchemy>=2.0,<3.0
+Werkzeug>=3.0,<4.0
+
+# --- Servidor de producao ---
+# O servidor embutido do Flask e so para desenvolvimento. Em producao quem
+# atende as requisicoes e o gunicorn.
+gunicorn>=23.0
+
+# --- Banco de dados ---
+# SQLite roda sem instalar nada (desenvolvimento local). Em producao usamos
+# PostgreSQL, e este driver e o que conversa com ele.
+psycopg[binary]>=3.2
+
+# --- Leitura de planilhas Excel e CSV ---
+pandas>=2.2,<3.0
+openpyxl>=3.1,<4.0
+
+# --- Datas ---
+python-dateutil>=2.9
+
+# --- Testes ---
+pytest>=8.0

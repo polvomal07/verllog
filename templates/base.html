@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block titulo %}{{ empresa.nome }}{% endblock %}</title>
+  <meta name="description" content="{{ empresa.slogan }}">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/telas.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/landing.css') }}">
+</head>
+<body>
+
+  <header class="cabecalho">
+    <div class="container cabecalho__conteudo">
+      <a class="logo" href="{{ url_for('publico.index') }}" aria-label="{{ empresa.nome }} página inicial">
+        <svg class="logo__marca" viewBox="0 0 40 40" role="img" aria-hidden="true">
+          <rect width="40" height="40" rx="11" fill="var(--cor-primaria)"/>
+          <path d="M10 12.5 L20 27.5 L30 12.5" fill="none" stroke="#fff"
+                stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"/>
+          <circle cx="30" cy="12.5" r="3.6" fill="var(--cor-acento)"/>
+        </svg>
+        <span class="logo__texto">
+          <strong>Verllog</strong>
+          <span>Logística</span>
+        </span>
+      </a>
+
+      <nav class="navegacao" aria-label="Navegação principal">
+        <a href="{{ url_for('publico.index') }}">Início</a>
+        <a href="{{ url_for('publico.rastreamento') }}">Rastreamento</a>
+        <a href="{{ url_for('publico.sobre') }}">Sobre nós</a>
+      </nav>
+    </div>
+  </header>
+
+  {% with mensagens = get_flashed_messages(with_categories=true) %}
+    {% if mensagens %}
+      <div class="container avisos">
+        {% for categoria, texto in mensagens %}
+          <div class="aviso aviso--{{ categoria }}">{{ texto }}</div>
+        {% endfor %}
+      </div>
+    {% endif %}
+  {% endwith %}
+
+  <main>
+    {% block conteudo %}{% endblock %}
+  </main>
+
+  <footer class="rodape">
+    <div class="container rodape__conteudo">
+      <div>
+        <p class="rodape__marca">{{ empresa.nome }}</p>
+        <p class="rodape__slogan">{{ empresa.slogan }}</p>
+      </div>
+    </div>
+    <div class="container">
+      <p class="rodape__aviso">
+        &copy; {{ ano }} {{ empresa.nome }}. Todos os direitos reservados.
+      </p>
+    </div>
+  </footer>
+
+  <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+  {% block scripts %}{% endblock %}
+</body>
+</html>

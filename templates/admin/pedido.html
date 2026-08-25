@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+
+{% block titulo %}{{ pedido.codigo_rastreio }} | Painel {{ empresa.nome }}{% endblock %}
+
+{% block conteudo %}
+<section class="secao painel">
+  <div class="container">
+
+    <p class="voltar voltar--topo">
+      <a href="{{ url_for('admin.painel') }}">&larr; Voltar ao painel</a>
+    </p>
+
+    <div class="painel__topo">
+      <div>
+        <h1 class="painel__titulo">{{ pedido.codigo_rastreio }}</h1>
+        <p class="painel__subtitulo">{{ pedido.origem }} &rarr; {{ pedido.destino }}</p>
+      </div>
+      <span class="etiqueta {% if pedido.entregue %}etiqueta--entregue{% endif %}">
+        {{ pedido.status_atual }}
+      </span>
+    </div>
+
+    {# No painel os dados aparecem completos — a máscara é só do site público. #}
+    <div class="bloco">
+      <h2 class="bloco__titulo">Dados do destinatário</h2>
+      <dl class="resumo resumo--admin">
+        <div class="resumo__item"><dt>Nome</dt><dd>{{ cliente.nome }}</dd></div>
+        <div class="resumo__item"><dt>CPF</dt><dd>{{ cliente.cpf or 'não informado' }}</dd></div>
+        <div class="resumo__item"><dt>Endereço</dt><dd>{{ cliente.endereco }}, {{ cliente.numero }}</dd></div>
+        <div class="resumo__item"><dt>Bairro</dt><dd>{{ cliente.bairro or 'não informado' }}</dd></div>
+        <div class="resumo__item"><dt>Cidade / UF</dt><dd>{{ cliente.cidade_uf }}</dd></div>
+        <div class="resumo__item"><dt>CEP</dt><dd>{{ cliente.cep or 'não informado' }}</dd></div>
+        <div class="resumo__item"><dt>Cadastro</dt><dd>{{ pedido.data_cadastro.strftime('%d/%m/%Y') }}</dd></div>
+        <div class="resumo__item">
+          <dt>Previsão</dt>
+          <dd>{% if pedido.previsao_entrega %}{{ pedido.previsao_entrega.strftime('%d/%m/%Y') }}{% else %}não definida{% endif %}</dd>
+        </div>
+      </dl>
+    </div>
+
+    <div class="bloco">
+      <h2 class="bloco__titulo">Histórico logístico</h2>
+      <ol class="linha-tempo">
+        {% for etapa in dados.etapas %}
+          <li class="etapa
+                     {% if etapa.concluida %}etapa--concluida{% else %}etapa--prevista{% endif %}
+                     {% if etapa.atual %}etapa--atual{% endif %}">
+            <div class="etapa__marcador" aria-hidden="true"></div>
+            <div class="etapa__conteudo">
+              <p class="etapa__status">
+                {{ etapa.status }}
+                {% if not etapa.concluida %}<span class="etapa__tag">previsto</span>{% endif %}
+              </p>
+              <p class="etapa__quando">{{ etapa.data }} às {{ etapa.hora }}</p>
+              <p class="etapa__local">{{ etapa.local }}</p>
+            </div>
+          </li>
+        {% endfor %}
+      </ol>
+    </div>
+
+    <p class="voltar">
+      <a href="{{ url_for('publico.rastreamento', codigo=pedido.codigo_rastreio) }}"
+         target="_blank" rel="noopener">Ver como o cliente vê &rarr;</a>
+    </p>
+
+  </div>
+</section>
+{% endblock %}
