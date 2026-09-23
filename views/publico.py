@@ -6,7 +6,14 @@ rastreamento. O usuário final nunca vê erro técnico — código fora do padr�
 código inexistente caem na mesma mensagem educada.
 """
 
-from flask import Blueprint, jsonify, render_template, request
+from flask import (
+    Blueprint,
+    current_app,
+    jsonify,
+    render_template,
+    request,
+    send_from_directory,
+)
 
 from models import Cliente, Movimentacao, Pedido
 from services import gerador_codigo
@@ -64,6 +71,17 @@ def rastreamento():
 
     return render_template(
         "rastreamento.html", encontrado=True, dados=resumo_publico(pedido)
+    )
+
+
+@publico_bp.route("/favicon.ico")
+def favicon():
+    """Navegadores e o Google pedem /favicon.ico na raiz, mesmo sem <link>."""
+    return send_from_directory(
+        current_app.static_folder + "/img",
+        "favicon.ico",
+        mimetype="image/vnd.microsoft.icon",
+        max_age=60 * 60 * 24 * 7,
     )
 
 
