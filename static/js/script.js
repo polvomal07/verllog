@@ -78,7 +78,7 @@ document.addEventListener("DOMContentLoaded", () => {
       evento.preventDefault();
       if (aviso) {
         aviso.textContent =
-          "Código fora do padrão. Use 2 letras + 12 números + 1 letra. Exemplo: VL263198595496D";
+          "Código inválido. O código deve ter duas letras, doze números e uma letra ao final. Exemplo: BR263198595496D";
       }
       campo.focus();
       return;

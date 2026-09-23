@@ -9,8 +9,8 @@
     <p class="cabecalho-pagina__rotulo">Rastreamento</p>
     <h1 class="busca-pagina__titulo">Rastreie sua encomenda</h1>
     <p class="busca-pagina__texto">
-      Informe o código que a loja enviou por e-mail para acompanhar o status
-      da entrega.
+      Informe o código de rastreamento enviado pela loja para consultar a
+      situação da sua encomenda.
     </p>
 
     <form class="busca" id="form-rastreio" action="{{ url_for('publico.rastreamento') }}"
@@ -25,7 +25,7 @@
         maxlength="15"
         spellcheck="false"
         autofocus>
-      <button class="busca__botao" type="submit">Rastrear pedido</button>
+      <button class="busca__botao" type="submit">Rastrear encomenda</button>
     </form>
 
     <p class="busca__exemplo">Exemplo: <code>BR263198595496D</code></p>
@@ -39,57 +39,59 @@
       <article class="ajuda__item">
         <h2>Onde encontro meu código?</h2>
         <p>
-          A {{ empresa.nome }} transporta encomendas para lojas parceiras, e é
-          a <strong>loja onde você comprou</strong> que envia o código de
-          rastreamento por e-mail assim que despacha o pedido. Procure pelo
-          e-mail de confirmação de envio. O código costuma vir no assunto ou
-          logo no início da mensagem.
+          A {{ empresa.nome }} realiza as entregas de lojas parceiras. O código
+          de rastreamento é enviado por e-mail pela <strong>loja onde a compra
+          foi feita</strong>, no momento do despacho. Verifique o e-mail de
+          confirmação de envio; o código normalmente consta no assunto ou no
+          início da mensagem.
         </p>
       </article>
 
       <article class="ajuda__item">
         <h2>Como é o formato do código?</h2>
         <p>
-          São 15 caracteres: <strong>duas letras</strong>, seguidas de
-          <strong>12 números</strong> e <strong>uma letra</strong> no final.
+          O código possui 15 caracteres: <strong>duas letras</strong>,
+          seguidas de <strong>doze números</strong> e de <strong>uma
+          letra</strong> ao final.
         </p>
       </article>
 
       <article class="ajuda__item">
         <h2>Meu código não foi encontrado</h2>
         <p>
-          Confira se todos os caracteres foram digitados corretamente. Códigos
-          emitidos há poucas horas podem levar até um dia útil para aparecer na
-          consulta, porque o pedido só entra na malha quando chega ao nosso
-          centro de recebimento.
+          Verifique se todos os caracteres foram digitados corretamente.
+          Códigos emitidos recentemente podem levar até um dia útil para ficar
+          disponíveis, pois o registro é feito quando a encomenda chega ao
+          nosso centro de recebimento.
         </p>
       </article>
 
       <article class="ajuda__item">
         <h2>Não recebi nenhum código</h2>
         <p>
-          Nesse caso, fale com a loja onde você fez a compra. A emissão do
-          código acontece no momento do despacho, e só a loja pode confirmar se
-          o pedido já foi postado.
+          Nesse caso, entre em contato com a loja onde a compra foi feita. O
+          código é emitido no momento do despacho, e somente a loja pode
+          confirmar se o pedido já foi enviado.
         </p>
       </article>
 
       <article class="ajuda__item">
-        <h2>Com que frequência atualiza?</h2>
+        <h2>Quando o rastreamento é atualizado?</h2>
         <p>
-          O histórico é atualizado a cada nova movimentação registrada nos
-          centros de distribuição. Etapas futuras não aparecem. Você vê apenas
-          o que já aconteceu com a sua encomenda.
+          O histórico é atualizado sempre que uma nova movimentação é
+          registrada nos centros de distribuição. São exibidas apenas as etapas
+          já realizadas.
         </p>
       </article>
 
       <article class="ajuda__item">
         <h2>O que significa cada status?</h2>
         <p>
-          <strong>Pedido recebido</strong> é a entrada na malha;
-          <strong>em transferência</strong> indica trajeto entre centros;
-          <strong>saiu para entrega</strong> significa que a encomenda está
-          com o entregador.
+          <strong>Pedido recebido</strong> indica que a encomenda foi
+          registrada pela Verllog. <strong>Em transferência</strong> indica
+          que ela está em trânsito entre centros de distribuição.
+          <strong>Saiu para entrega</strong> indica que a encomenda está com o
+          entregador, a caminho do endereço de destino.
         </p>
       </article>
     </div>

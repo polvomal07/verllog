@@ -40,7 +40,7 @@
         </form>
 
         <p class="vazio__dica">
-          O código tem 15 caracteres: <strong>BR</strong> + 12 números + 1 letra.
+          O código possui 15 caracteres: duas letras, doze números e uma letra ao final.
         </p>
       </div>
     </div>
@@ -111,7 +111,7 @@
 
       {% if not dados.entregue %}
         <p class="aguardando">
-          Assim que houver uma nova movimentação, ela aparece aqui.
+          As próximas movimentações serão exibidas nesta página assim que forem registradas.
         </p>
       {% endif %}
 
@@ -121,7 +121,7 @@
         <p>{{ dados.destino }}</p>
         <p class="entrega__cpf">CPF: {{ dados.cpf }}</p>
         <p class="entrega__nota">
-          Por segurança, o endereço e o CPF aparecem parcialmente ocultos.
+          Por segurança, o endereço e o CPF são exibidos parcialmente.
         </p>
       </div>
 
