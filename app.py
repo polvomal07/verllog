@@ -35,6 +35,7 @@ def create_app(config_object=Config):
         import models  # noqa: F401
 
         db.create_all()
+        ampliar_coluna_codigo()
 
     registrar_context_processors(app)
     registrar_blueprints(app)
@@ -42,6 +43,27 @@ def create_app(config_object=Config):
     registrar_comandos(app)
 
     return app
+
+
+def ampliar_coluna_codigo():
+    """
+    Bancos criados antes guardavam o código em VARCHAR(15), e os códigos
+    legados de 16+ caracteres estouravam no INSERT. create_all não altera
+    tabela que já existe, então o ajuste é feito aqui, uma vez só.
+    SQLite não impõe tamanho de VARCHAR, por isso só o Postgres precisa disso.
+    """
+    if db.engine.dialect.name != "postgresql":
+        return
+    with db.engine.begin() as conexao:
+        tamanho = conexao.exec_driver_sql(
+            "SELECT character_maximum_length FROM information_schema.columns"
+            " WHERE table_name = 'pedidos' AND column_name = 'codigo_rastreio'"
+        ).scalar()
+        if tamanho is None or tamanho >= 32:
+            return
+        conexao.exec_driver_sql(
+            "ALTER TABLE pedidos ALTER COLUMN codigo_rastreio TYPE VARCHAR(32)"
+        )
 
 
 def registrar_context_processors(app):
