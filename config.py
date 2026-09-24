@@ -104,7 +104,8 @@ class Config:
     # estão, para não perder o histórico — mas todo código NOVO que o sistema
     # gerar continua saindo no padrão oficial.
     ACEITAR_CODIGOS_LEGADOS = True
-    CODIGO_REGEX_LEGADO = r"^[A-Z]{2}\d{8,20}[A-Z]?$"
+    # O lookahead segura o legado no mesmo teto de 15 caracteres da coluna.
+    CODIGO_REGEX_LEGADO = r"^(?=.{10,15}$)[A-Z]{2}\d{8,13}[A-Z]?$"
 
     # ------------------------------------------------------------------
     # Motor de rastreamento (Fase 7)

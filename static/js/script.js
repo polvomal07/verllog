@@ -12,7 +12,7 @@
 const PADRAO_CODIGO = /^[A-Z]{2}\d{12}[A-Z]$/;
 
 // Códigos antigos, aceitos enquanto ACEITAR_CODIGOS_LEGADOS estiver ligado.
-const PADRAO_LEGADO = /^[A-Z]{2}\d{8,20}[A-Z]?$/;
+const PADRAO_LEGADO = /^(?=.{10,15}$)[A-Z]{2}\d{8,13}[A-Z]?$/;
 
 /* ------------------------------------------------------------------ Menu
    No celular o menu fica recolhido atrás do botão de três riscos. No

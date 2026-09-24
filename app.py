@@ -35,7 +35,7 @@ def create_app(config_object=Config):
         import models  # noqa: F401
 
         db.create_all()
-        ampliar_coluna_codigo()
+        restaurar_coluna_codigo()
 
     registrar_context_processors(app)
     registrar_blueprints(app)
@@ -45,12 +45,11 @@ def create_app(config_object=Config):
     return app
 
 
-def ampliar_coluna_codigo():
+def restaurar_coluna_codigo():
     """
-    Bancos criados antes guardavam o código em VARCHAR(15), e os códigos
-    legados de 16+ caracteres estouravam no INSERT. create_all não altera
-    tabela que já existe, então o ajuste é feito aqui, uma vez só.
-    SQLite não impõe tamanho de VARCHAR, por isso só o Postgres precisa disso.
+    Por um deploy o código chegou a ser VARCHAR(32) no Postgres. O padrão é
+    15 caracteres, então a coluna volta a 15 aqui, uma vez só. SQLite não
+    impõe tamanho de VARCHAR, por isso só o Postgres precisa disso.
     """
     if db.engine.dialect.name != "postgresql":
         return
@@ -59,10 +58,21 @@ def ampliar_coluna_codigo():
             "SELECT character_maximum_length FROM information_schema.columns"
             " WHERE table_name = 'pedidos' AND column_name = 'codigo_rastreio'"
         ).scalar()
-        if tamanho is None or tamanho >= 32:
+        if tamanho is None or tamanho <= 15:
+            return
+        # Com algum código maior já gravado, o ALTER falharia e o site não
+        # subiria. Nesse caso a coluna fica como está até o pedido sair.
+        maiores = conexao.exec_driver_sql(
+            "SELECT count(*) FROM pedidos WHERE length(codigo_rastreio) > 15"
+        ).scalar()
+        if maiores:
+            print(
+                "codigo_rastreio segue em VARCHAR(" + str(tamanho) + "): "
+                + str(maiores) + " pedido(s) com código acima de 15 caracteres."
+            )
             return
         conexao.exec_driver_sql(
-            "ALTER TABLE pedidos ALTER COLUMN codigo_rastreio TYPE VARCHAR(32)"
+            "ALTER TABLE pedidos ALTER COLUMN codigo_rastreio TYPE VARCHAR(15)"
         )
 
 

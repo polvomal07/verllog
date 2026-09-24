@@ -14,8 +14,7 @@ class Pedido(db.Model):
     )
 
     # Chave natural do sistema: único, no padrão BR + 12 dígitos + 1 letra.
-    # Cabe 32 porque os códigos legados podem ter até 23 caracteres.
-    codigo_rastreio = db.Column(db.String(32), unique=True, nullable=False, index=True)
+    codigo_rastreio = db.Column(db.String(15), unique=True, nullable=False, index=True)
 
     data_cadastro = db.Column(db.Date, nullable=False)
     previsao_entrega = db.Column(db.Date)
