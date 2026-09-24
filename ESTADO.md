@@ -62,7 +62,7 @@ os pedidos existentes.
 ## Cronograma da entrega
 
 ```
-dia  0   Pedido recebido                      Manaus/AM
+dia  0   Pedido postado                       Manaus/AM
 dia  3   Pedido processado                    Manaus/AM
 dia  6   Objeto coletado                      Manaus/AM
 dia 6-20 Em transferência                     centros no caminho

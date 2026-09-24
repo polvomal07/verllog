@@ -121,7 +121,7 @@ class Config:
     DURACAO_TOTAL_DIAS = 35
 
     CRONOGRAMA = {
-        "Pedido recebido": 0,
+        "Pedido postado": 0,
         "Pedido processado": 3,
         "Objeto coletado": 6,
         # As etapas "Em transferência" ficam na janela definida abaixo.
@@ -140,7 +140,7 @@ class Config:
 
     # Fluxo de status, na ordem. Alterar esta lista muda a timeline inteira.
     FLUXO_STATUS = [
-        "Pedido recebido",
+        "Pedido postado",
         "Pedido processado",
         "Objeto coletado",
         "Em transferência",

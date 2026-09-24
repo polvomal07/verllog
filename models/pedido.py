@@ -57,7 +57,7 @@ class Pedido(db.Model):
         if ocorridas:
             return ocorridas[-1].status
         # Pedido com data futura: ainda não teve nenhum evento.
-        return self.movimentacoes[0].status if self.movimentacoes else "Pedido recebido"
+        return self.movimentacoes[0].status if self.movimentacoes else "Pedido postado"
 
     @property
     def movimentacao_atual(self):

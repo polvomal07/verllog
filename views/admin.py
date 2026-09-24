@@ -99,7 +99,7 @@ def _montar_estatisticas(pedidos):
         "em_transito": sum(
             quantidade
             for status, quantidade in contagem.items()
-            if status not in ("Entregue", "Pedido recebido")
+            if status not in ("Entregue", "Pedido postado")
         ),
         "novos_hoje": sum(1 for p in pedidos if p.data_cadastro == hoje),
         "por_status": contagem,

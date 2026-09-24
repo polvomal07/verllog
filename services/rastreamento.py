@@ -22,7 +22,7 @@ from services.rotas import montar_rota
 
 # Descrição amigável de cada status do fluxo.
 DESCRICOES = {
-    "Pedido recebido": "Pedido recebido pela {empresa}",
+    "Pedido postado": "Pedido postado na {empresa}",
     "Pedido processado": "Pedido processado e etiquetado no centro de origem",
     "Objeto coletado": "Objeto coletado e liberado para transporte",
     "Em transferência": "Objeto em trânsito entre centros de distribuição",
@@ -86,7 +86,7 @@ def _montar_sequencia(rota):
     cronograma = Config.CRONOGRAMA
 
     sequencia = [
-        ("Pedido recebido", origem, cronograma["Pedido recebido"]),
+        ("Pedido postado", origem, cronograma["Pedido postado"]),
         ("Pedido processado", origem, cronograma["Pedido processado"]),
         ("Objeto coletado", origem, cronograma["Objeto coletado"]),
     ]

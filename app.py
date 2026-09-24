@@ -36,6 +36,7 @@ def create_app(config_object=Config):
 
         db.create_all()
         restaurar_coluna_codigo()
+        renomear_status_postado()
 
     registrar_context_processors(app)
     registrar_blueprints(app)
@@ -73,6 +74,21 @@ def restaurar_coluna_codigo():
             return
         conexao.exec_driver_sql(
             "ALTER TABLE pedidos ALTER COLUMN codigo_rastreio TYPE VARCHAR(15)"
+        )
+
+
+def renomear_status_postado():
+    """
+    O primeiro status se chamava "Pedido recebido" e passou a "Pedido
+    postado". As movimentações ficam gravadas, então as antigas são
+    atualizadas aqui. Depois da primeira vez não sobra linha para mudar.
+    """
+    with db.engine.begin() as conexao:
+        conexao.exec_driver_sql(
+            "UPDATE movimentacoes"
+            " SET status = 'Pedido postado',"
+            " descricao = REPLACE(descricao, 'Pedido recebido pela', 'Pedido postado na')"
+            " WHERE status = 'Pedido recebido'"
         )
 
 
