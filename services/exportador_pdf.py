@@ -230,7 +230,7 @@ class _Documento(FPDF):
 
         rua = ", ".join(parte for parte in (cliente.endereco, cliente.numero) if parte)
         linhas = [
-            (("Nome", cliente.nome), ("CPF", cliente.cpf or "não informado")),
+            (("Nome", cliente.nome), ("CPF", cliente.cpf_formatado or "não informado")),
             (("Endereço de entrega", rua or "não informado"), ("CEP", cliente.cep or "não informado")),
             (("Bairro", cliente.bairro or "não informado"), ("Cidade / UF", cliente.cidade_uf)),
         ]

@@ -41,6 +41,25 @@ class Cliente(db.Model):
         return f"{', '.join(partes)} — {self.cidade_uf} — CEP {self.cep or 's/ CEP'}"
 
     @property
+    def cpf_formatado(self):
+        """
+        CPF completo no formato 000.000.000-00 — uso exclusivo do painel.
+
+        Planilhas (Google Sheets, Excel) tratam o CPF como número e apagam o
+        zero do começo: 05445407861 chega como 5445407861. Com 9 ou 10
+        dígitos, os zeros que faltam são devolvidos só na exibição; o valor
+        gravado não muda, para a reimportação continuar achando o cliente.
+        """
+        if not self.cpf:
+            return None
+        digitos = "".join(c for c in self.cpf if c.isdigit())
+        if 9 <= len(digitos) <= 10:
+            digitos = digitos.zfill(11)
+        if len(digitos) != 11:
+            return self.cpf
+        return f"{digitos[:3]}.{digitos[3:6]}.{digitos[6:9]}-{digitos[9:]}"
+
+    @property
     def cpf_mascarado(self):
         """Mostra apenas os dois últimos dígitos: ***.***.***-00"""
         if not self.cpf:

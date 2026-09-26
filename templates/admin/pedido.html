@@ -25,7 +25,7 @@
       <h2 class="bloco__titulo">Dados do destinatário</h2>
       <dl class="resumo resumo--admin">
         <div class="resumo__item"><dt>Nome</dt><dd>{{ cliente.nome }}</dd></div>
-        <div class="resumo__item"><dt>CPF</dt><dd>{{ cliente.cpf or 'não informado' }}</dd></div>
+        <div class="resumo__item"><dt>CPF</dt><dd>{{ cliente.cpf_formatado or 'não informado' }}</dd></div>
         <div class="resumo__item"><dt>Endereço</dt><dd>{{ cliente.endereco }}, {{ cliente.numero }}</dd></div>
         <div class="resumo__item"><dt>Bairro</dt><dd>{{ cliente.bairro or 'não informado' }}</dd></div>
         <div class="resumo__item"><dt>Cidade / UF</dt><dd>{{ cliente.cidade_uf }}</dd></div>
