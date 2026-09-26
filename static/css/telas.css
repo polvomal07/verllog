@@ -485,6 +485,45 @@
 .link-tabela { color: var(--cor-azul); text-decoration: none; font-weight: 600; }
 .link-tabela:hover { text-decoration: underline; }
 
+.tabela__marcar { width: 1%; padding-right: 0 !important; }
+.tabela__marcar input { width: 17px; height: 17px; cursor: pointer; accent-color: var(--cor-erro); }
+
+/* Exclusão de clientes */
+.botao-perigo {
+  padding: 10px 20px;
+  border: 0;
+  border-radius: 9px;
+  background: var(--cor-erro);
+  color: #fff;
+  font-family: inherit;
+  font-size: .9rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.botao-perigo:hover { filter: brightness(1.08); }
+.botao-perigo:disabled { opacity: .45; cursor: not-allowed; filter: none; }
+
+.exclusao__barra { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-bottom: 14px; }
+.exclusao__contagem { font-size: .88rem; color: var(--texto-suave); }
+
+.exclusao__confirmar {
+  margin: 0 0 18px;
+  padding: 18px 20px;
+  border: 1px solid #fecaca;
+  border-radius: 10px;
+  background: #fef2f2;
+  color: #7f1d1d;
+}
+
+.exclusao__confirmar[hidden] { display: none; }
+.exclusao__titulo { margin: 0 0 8px; font-weight: 700; }
+.exclusao__lista { margin: 0 0 12px; padding-left: 20px; font-size: .9rem; max-height: 180px; overflow-y: auto; }
+.exclusao__alerta { margin: 0 0 14px; font-size: .88rem; }
+.exclusao__acoes { display: flex; flex-wrap: wrap; gap: 10px; }
+.exclusao__acoes .botao-secundario { background: #fff; font-family: inherit; cursor: pointer; }
+form.bloco .exclusao__confirmar { margin: 16px 0 0; }
+
 .resumo--admin { grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); }
 .resumo--admin dt { color: var(--texto-suave); }
 .resumo--admin dd { color: var(--texto); }

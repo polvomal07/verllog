@@ -113,10 +113,25 @@
       </div>
 
       {% if pedidos %}
+        <form method="post" action="{{ url_for('admin.apagar') }}" data-apagar>
+        <input type="hidden" name="busca" value="{{ busca }}">
+
+        <div class="exclusao__barra">
+          <button class="botao-perigo" type="button" data-apagar-abrir disabled>
+            Apagar selecionados
+          </button>
+          <span class="exclusao__contagem" data-apagar-contagem></span>
+        </div>
+
+        {% include "admin/_confirmar_exclusao.html" %}
+
         <div class="tabela-rolagem">
           <table class="tabela">
             <thead>
               <tr>
+                <th class="tabela__marcar">
+                  <input type="checkbox" data-apagar-todos aria-label="Selecionar todos">
+                </th>
                 <th>Código</th>
                 <th>Cliente</th>
                 <th>Cidade</th>
@@ -130,6 +145,12 @@
             <tbody>
               {% for pedido in pedidos %}
                 <tr>
+                  <td class="tabela__marcar">
+                    <input type="checkbox" name="clientes" value="{{ pedido.cliente.id }}"
+                           data-nome="{{ pedido.cliente.nome }}"
+                           data-pedidos="{{ pedido.cliente.pedidos|length }}"
+                           aria-label="Selecionar {{ pedido.cliente.nome }}">
+                  </td>
                   <td><code>{{ pedido.codigo_rastreio }}</code></td>
                   <td>{{ pedido.cliente.nome }}</td>
                   <td>{{ pedido.cliente.cidade }}</td>
@@ -155,6 +176,7 @@
             </tbody>
           </table>
         </div>
+        </form>
       {% else %}
         <p class="bloco__texto">
           {% if busca %}
@@ -168,4 +190,8 @@
 
   </div>
 </section>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/admin.js') }}"></script>
 {% endblock %}

@@ -22,6 +22,7 @@ from flask import (
 from werkzeug.utils import secure_filename
 
 from config import Config
+from extensions import db
 from models import Cliente, Pedido
 from services import gerador_codigo
 from services.importador import ErroDePlanilha, importar_planilha
@@ -207,6 +208,51 @@ def importar():
     flash("Importação concluída: " + resumo, "sucesso")
 
     return redirect(url_for("admin.painel"))
+
+
+# ----------------------------------------------------------------------
+# Exclusão
+# ----------------------------------------------------------------------
+
+
+@admin_bp.route("/apagar", methods=["POST"])
+@login_obrigatorio
+def apagar():
+    """
+    Apaga os clientes marcados, com todos os pedidos e movimentações deles.
+
+    A exclusão é definitiva. Pedidos e movimentações saem junto por causa do
+    cascade="all, delete-orphan" nos models, então não sobra nada solto.
+    """
+    ids = {int(valor) for valor in request.form.getlist("clientes") if valor.isdigit()}
+    busca = request.form.get("busca", "").strip()
+    destino = url_for("admin.painel", busca=busca) if busca else url_for("admin.painel")
+
+    if not ids:
+        flash("Selecione pelo menos um cliente para apagar.", "erro")
+        return redirect(destino)
+
+    clientes = Cliente.query.filter(Cliente.id.in_(ids)).all()
+
+    if not clientes:
+        flash("Os clientes selecionados não existem mais.", "erro")
+        return redirect(destino)
+
+    total_pedidos = sum(len(cliente.pedidos) for cliente in clientes)
+    for cliente in clientes:
+        db.session.delete(cliente)
+    db.session.commit()
+
+    flash(
+        "Apagados: "
+        + str(len(clientes))
+        + (" cliente" if len(clientes) == 1 else " clientes")
+        + " e "
+        + str(total_pedidos)
+        + (" pedido." if total_pedidos == 1 else " pedidos."),
+        "sucesso",
+    )
+    return redirect(destino)
 
 
 @admin_bp.route("/gerar-codigo")

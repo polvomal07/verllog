@@ -64,6 +64,24 @@
          target="_blank" rel="noopener">Ver como o cliente vê &rarr;</a>
     </p>
 
+    <form class="bloco" method="post" action="{{ url_for('admin.apagar') }}" data-apagar>
+      <h2 class="bloco__titulo">Apagar cliente</h2>
+      <p class="bloco__texto">
+        Remove {{ cliente.nome }} e
+        {% if cliente.pedidos|length == 1 %}o pedido dele{% else %}os {{ cliente.pedidos|length }} pedidos dele{% endif %}
+        do sistema. O código deixa de ser encontrado no site.
+      </p>
+      <input type="hidden" name="clientes" value="{{ cliente.id }}"
+             data-nome="{{ cliente.nome }}" data-pedidos="{{ cliente.pedidos|length }}">
+      <button class="botao-perigo" type="button" data-apagar-abrir>Apagar este cliente</button>
+
+      {% include "admin/_confirmar_exclusao.html" %}
+    </form>
+
   </div>
 </section>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/admin.js') }}"></script>
 {% endblock %}

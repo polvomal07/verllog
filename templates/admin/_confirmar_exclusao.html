@@ -1,0 +1,15 @@
+{# Aviso de confirmação da exclusão. Fica escondido até o botão de apagar
+   ser clicado; quem preenche a lista e os números é o static/js/admin.js. #}
+<div class="exclusao__confirmar" data-apagar-painel hidden role="alertdialog"
+     aria-labelledby="exclusao-titulo">
+  <p class="exclusao__titulo" id="exclusao-titulo" data-apagar-resumo></p>
+  <ul class="exclusao__lista" data-apagar-lista></ul>
+  <p class="exclusao__alerta">
+    Os pedidos e todo o histórico de rastreio desses clientes serão apagados.
+    Não dá para desfazer.
+  </p>
+  <div class="exclusao__acoes">
+    <button class="botao-perigo" type="submit">Confirmar exclusão</button>
+    <button class="botao-secundario" type="button" data-apagar-cancelar>Cancelar</button>
+  </div>
+</div>
