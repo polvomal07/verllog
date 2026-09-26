@@ -11,6 +11,7 @@ from functools import wraps
 
 from flask import (
     Blueprint,
+    Response,
     current_app,
     flash,
     redirect,
@@ -25,6 +26,7 @@ from config import Config
 from extensions import db
 from models import Cliente, Pedido
 from services import gerador_codigo
+from services.exportador_pdf import gerar_pdf
 from services.importador import ErroDePlanilha, importar_planilha
 from services.rastreamento import resumo_publico
 
@@ -208,6 +210,43 @@ def importar():
     flash("Importação concluída: " + resumo, "sucesso")
 
     return redirect(url_for("admin.painel"))
+
+
+# ----------------------------------------------------------------------
+# Exportação em PDF
+# ----------------------------------------------------------------------
+
+
+@admin_bp.route("/exportar", methods=["POST"])
+@login_obrigatorio
+def exportar():
+    """
+    Gera um PDF com o rastreio dos clientes marcados, igual ao que eles veem
+    no site. Cada pedido começa numa página nova.
+    """
+    ids = {int(valor) for valor in request.form.getlist("clientes") if valor.isdigit()}
+    busca = request.form.get("busca", "").strip()
+
+    pedidos = (
+        Pedido.query.filter(Pedido.cliente_id.in_(ids)).order_by(Pedido.id.desc()).all()
+        if ids
+        else []
+    )
+
+    if not pedidos:
+        flash("Selecione pelo menos um cliente para exportar.", "erro")
+        return redirect(url_for("admin.painel", busca=busca) if busca else url_for("admin.painel"))
+
+    if len(pedidos) == 1:
+        nome_arquivo = "rastreio-" + pedidos[0].codigo_rastreio + ".pdf"
+    else:
+        nome_arquivo = "rastreios-" + datetime.now().strftime("%Y%m%d-%H%M") + ".pdf"
+
+    return Response(
+        gerar_pdf(pedidos),
+        mimetype="application/pdf",
+        headers={"Content-Disposition": 'attachment; filename="' + nome_arquivo + '"'},
+    )
 
 
 # ----------------------------------------------------------------------

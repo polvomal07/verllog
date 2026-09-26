@@ -488,7 +488,22 @@
 .tabela__marcar { width: 1%; padding-right: 0 !important; }
 .tabela__marcar input { width: 17px; height: 17px; cursor: pointer; accent-color: var(--cor-erro); }
 
-/* Exclusão de clientes */
+/* Exportação e exclusão de clientes */
+.botao-exportar {
+  padding: 10px 20px;
+  border: 0;
+  border-radius: 9px;
+  background: var(--cor-primaria);
+  color: #fff;
+  font-family: inherit;
+  font-size: .9rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.botao-exportar:hover { background: var(--cor-primaria-clara); }
+.botao-exportar:disabled { opacity: .45; cursor: not-allowed; background: var(--cor-primaria); }
+
 .botao-perigo {
   padding: 10px 20px;
   border: 0;

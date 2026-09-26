@@ -1,5 +1,8 @@
 /* ==========================================================================
-   Verllog Logística — exclusão de clientes no painel
+   Verllog Logística — seleção de clientes no painel (exportar e apagar)
+
+   "Exportar PDF" envia direto para /admin/exportar (formaction no botão) e
+   só fica ativo com alguém marcado.
 
    O botão "Apagar" não envia nada: ele abre um aviso na própria página com os
    nomes e a quantidade de pedidos. Só o "Confirmar exclusão" envia o
@@ -19,6 +22,7 @@ document.querySelectorAll("form[data-apagar]").forEach((form) => {
   const contagem = form.querySelector("[data-apagar-contagem]");
   const todos = form.querySelector("[data-apagar-todos]");
   const marcadores = [...form.querySelectorAll('input[type="checkbox"][name="clientes"]')];
+  const exigemSelecao = form.querySelectorAll("[data-exige-selecao]");
 
   // Na página do pedido o cliente vem num campo escondido, sempre "marcado".
   function selecionados() {
@@ -48,6 +52,7 @@ document.querySelectorAll("form[data-apagar]").forEach((form) => {
     const clientes = selecionados();
     if (marcadores.length) {
       abrir.disabled = clientes.length === 0;
+      exigemSelecao.forEach((botao) => { botao.disabled = clientes.length === 0; });
       contagem.textContent = clientes.length
         ? plural(clientes.length, "cliente selecionado", "clientes selecionados")
         : "";

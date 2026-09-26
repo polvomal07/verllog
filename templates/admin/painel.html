@@ -117,6 +117,10 @@
         <input type="hidden" name="busca" value="{{ busca }}">
 
         <div class="exclusao__barra">
+          <button class="botao-exportar" type="submit" data-exige-selecao disabled
+                  formaction="{{ url_for('admin.exportar') }}">
+            Exportar PDF
+          </button>
           <button class="botao-perigo" type="button" data-apagar-abrir disabled>
             Apagar selecionados
           </button>

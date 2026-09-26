@@ -65,15 +65,19 @@
     </p>
 
     <form class="bloco" method="post" action="{{ url_for('admin.apagar') }}" data-apagar>
-      <h2 class="bloco__titulo">Apagar cliente</h2>
+      <h2 class="bloco__titulo">Cliente</h2>
       <p class="bloco__texto">
-        Remove {{ cliente.nome }} e
-        {% if cliente.pedidos|length == 1 %}o pedido dele{% else %}os {{ cliente.pedidos|length }} pedidos dele{% endif %}
-        do sistema. O código deixa de ser encontrado no site.
+        O PDF traz o rastreio como {{ cliente.nome }} vê no site, de
+        {% if cliente.pedidos|length == 1 %}1 pedido{% else %}{{ cliente.pedidos|length }} pedidos{% endif %}.
+        Apagar remove o cliente e os pedidos dele; o código deixa de ser encontrado no site.
       </p>
       <input type="hidden" name="clientes" value="{{ cliente.id }}"
              data-nome="{{ cliente.nome }}" data-pedidos="{{ cliente.pedidos|length }}">
-      <button class="botao-perigo" type="button" data-apagar-abrir>Apagar este cliente</button>
+      <div class="exclusao__barra">
+        <button class="botao-exportar" type="submit"
+                formaction="{{ url_for('admin.exportar') }}">Exportar PDF</button>
+        <button class="botao-perigo" type="button" data-apagar-abrir>Apagar este cliente</button>
+      </div>
 
       {% include "admin/_confirmar_exclusao.html" %}
     </form>

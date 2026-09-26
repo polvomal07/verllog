@@ -26,3 +26,6 @@ python-dateutil>=2.9
 
 # --- Testes ---
 pytest>=8.0
+
+# --- Exportacao do rastreio em PDF (painel) ---
+fpdf2>=2.8,<3.0
