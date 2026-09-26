@@ -217,25 +217,31 @@ def importar():
 # ----------------------------------------------------------------------
 
 
+def _pedidos_marcados():
+    """Pedidos marcados no formulário (a seleção é por pedido, não por cliente)."""
+    ids = {int(valor) for valor in request.form.getlist("pedidos") if valor.isdigit()}
+    if not ids:
+        return []
+    return Pedido.query.filter(Pedido.id.in_(ids)).order_by(Pedido.id.desc()).all()
+
+
+def _voltar_ao_painel():
+    busca = request.form.get("busca", "").strip()
+    return redirect(url_for("admin.painel", busca=busca) if busca else url_for("admin.painel"))
+
+
 @admin_bp.route("/exportar", methods=["POST"])
 @login_obrigatorio
 def exportar():
     """
-    Gera um PDF com o rastreio dos clientes marcados, igual ao que eles veem
-    no site. Cada pedido começa numa página nova.
+    Gera um PDF com o rastreio dos pedidos marcados, igual ao que o cliente
+    vê no site. Cada pedido começa numa página nova.
     """
-    ids = {int(valor) for valor in request.form.getlist("clientes") if valor.isdigit()}
-    busca = request.form.get("busca", "").strip()
-
-    pedidos = (
-        Pedido.query.filter(Pedido.cliente_id.in_(ids)).order_by(Pedido.id.desc()).all()
-        if ids
-        else []
-    )
+    pedidos = _pedidos_marcados()
 
     if not pedidos:
-        flash("Selecione pelo menos um cliente para exportar.", "erro")
-        return redirect(url_for("admin.painel", busca=busca) if busca else url_for("admin.painel"))
+        flash("Selecione pelo menos um pedido para exportar.", "erro")
+        return _voltar_ao_painel()
 
     if len(pedidos) == 1:
         nome_arquivo = "rastreio-" + pedidos[0].codigo_rastreio + ".pdf"
@@ -258,40 +264,38 @@ def exportar():
 @login_obrigatorio
 def apagar():
     """
-    Apaga os clientes marcados, com todos os pedidos e movimentações deles.
+    Apaga só os pedidos marcados, com as movimentações deles.
 
-    A exclusão é definitiva. Pedidos e movimentações saem junto por causa do
-    cascade="all, delete-orphan" nos models, então não sobra nada solto.
+    Os outros pedidos do mesmo cliente continuam. O cadastro do cliente só
+    sai quando o último pedido dele é apagado, para não sobrar cliente vazio.
+    A exclusão é definitiva.
     """
-    ids = {int(valor) for valor in request.form.getlist("clientes") if valor.isdigit()}
-    busca = request.form.get("busca", "").strip()
-    destino = url_for("admin.painel", busca=busca) if busca else url_for("admin.painel")
+    pedidos = _pedidos_marcados()
 
-    if not ids:
-        flash("Selecione pelo menos um cliente para apagar.", "erro")
-        return redirect(destino)
+    if not pedidos:
+        flash("Selecione pelo menos um pedido para apagar.", "erro")
+        return _voltar_ao_painel()
 
-    clientes = Cliente.query.filter(Cliente.id.in_(ids)).all()
+    clientes = {pedido.cliente for pedido in pedidos}
+    for pedido in pedidos:
+        # delete() leva as movimentações junto (cascade no model).
+        db.session.delete(pedido)
+    db.session.flush()
 
-    if not clientes:
-        flash("Os clientes selecionados não existem mais.", "erro")
-        return redirect(destino)
-
-    total_pedidos = sum(len(cliente.pedidos) for cliente in clientes)
+    # Conta no banco, e não pela lista em memória, que ainda traz os
+    # pedidos recém-apagados até o commit.
     for cliente in clientes:
-        db.session.delete(cliente)
+        if Pedido.query.filter_by(cliente_id=cliente.id).count() == 0:
+            db.session.delete(cliente)
     db.session.commit()
 
     flash(
         "Apagados: "
-        + str(len(clientes))
-        + (" cliente" if len(clientes) == 1 else " clientes")
-        + " e "
-        + str(total_pedidos)
-        + (" pedido." if total_pedidos == 1 else " pedidos."),
+        + str(len(pedidos))
+        + (" pedido." if len(pedidos) == 1 else " pedidos."),
         "sucesso",
     )
-    return redirect(destino)
+    return _voltar_ao_painel()
 
 
 @admin_bp.route("/gerar-codigo")

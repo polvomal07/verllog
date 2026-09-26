@@ -1,16 +1,15 @@
 /* ==========================================================================
-   Verllog Logística — seleção de clientes no painel (exportar e apagar)
+   Verllog Logística — seleção de pedidos no painel (exportar e apagar)
+
+   A seleção é por PEDIDO: cada linha da tabela é marcada sozinha, mesmo que
+   o mesmo cliente tenha outros pedidos.
 
    "Exportar PDF" envia direto para /admin/exportar (formaction no botão) e
-   só fica ativo com alguém marcado.
+   só fica ativo com algum pedido marcado.
 
    O botão "Apagar" não envia nada: ele abre um aviso na própria página com os
-   nomes e a quantidade de pedidos. Só o "Confirmar exclusão" envia o
-   formulário para /admin/apagar.
-
-   Um cliente pode ter mais de um pedido, então aparece em mais de uma linha.
-   Marcar uma linha marca todas as do mesmo cliente, para ficar claro que
-   tudo dele vai junto.
+   pedidos marcados. Só o "Confirmar exclusão" envia o formulário para
+   /admin/apagar.
    ========================================================================== */
 
 document.querySelectorAll("form[data-apagar]").forEach((form) => {
@@ -21,23 +20,19 @@ document.querySelectorAll("form[data-apagar]").forEach((form) => {
   const cancelar = form.querySelector("[data-apagar-cancelar]");
   const contagem = form.querySelector("[data-apagar-contagem]");
   const todos = form.querySelector("[data-apagar-todos]");
-  const marcadores = [...form.querySelectorAll('input[type="checkbox"][name="clientes"]')];
+  const marcadores = [...form.querySelectorAll('input[type="checkbox"][name="pedidos"]')];
   const exigemSelecao = form.querySelectorAll("[data-exige-selecao]");
 
-  // Na página do pedido o cliente vem num campo escondido, sempre "marcado".
+  // Na página do pedido ele vem num campo escondido, sempre "marcado".
   function selecionados() {
     const campos = marcadores.length
       ? marcadores.filter((campo) => campo.checked)
-      : [...form.querySelectorAll('input[name="clientes"]')];
+      : [...form.querySelectorAll('input[name="pedidos"]')];
 
-    const porId = new Map();
-    campos.forEach((campo) => {
-      porId.set(campo.value, {
-        nome: campo.dataset.nome,
-        pedidos: Number(campo.dataset.pedidos) || 0,
-      });
-    });
-    return [...porId.values()];
+    return campos.map((campo) => ({
+      nome: campo.dataset.nome,
+      codigo: campo.dataset.codigo,
+    }));
   }
 
   function plural(numero, singular, varios) {
@@ -49,31 +44,23 @@ document.querySelectorAll("form[data-apagar]").forEach((form) => {
   }
 
   function atualizar() {
-    const clientes = selecionados();
+    const pedidos = selecionados();
     if (marcadores.length) {
-      abrir.disabled = clientes.length === 0;
-      exigemSelecao.forEach((botao) => { botao.disabled = clientes.length === 0; });
-      contagem.textContent = clientes.length
-        ? plural(clientes.length, "cliente selecionado", "clientes selecionados")
+      abrir.disabled = pedidos.length === 0;
+      exigemSelecao.forEach((botao) => { botao.disabled = pedidos.length === 0; });
+      contagem.textContent = pedidos.length
+        ? plural(pedidos.length, "pedido selecionado", "pedidos selecionados")
         : "";
       if (todos) {
-        const marcados = marcadores.filter((campo) => campo.checked).length;
-        todos.checked = marcados > 0 && marcados === marcadores.length;
-        todos.indeterminate = marcados > 0 && marcados < marcadores.length;
+        todos.checked = pedidos.length > 0 && pedidos.length === marcadores.length;
+        todos.indeterminate = pedidos.length > 0 && pedidos.length < marcadores.length;
       }
     }
     // Mudou a seleção com o aviso aberto: fecha para não confirmar outra lista.
     fecharPainel();
   }
 
-  marcadores.forEach((campo) => {
-    campo.addEventListener("change", () => {
-      marcadores
-        .filter((outro) => outro.value === campo.value)
-        .forEach((outro) => { outro.checked = campo.checked; });
-      atualizar();
-    });
-  });
+  marcadores.forEach((campo) => campo.addEventListener("change", atualizar));
 
   if (todos) {
     todos.addEventListener("change", () => {
@@ -83,17 +70,14 @@ document.querySelectorAll("form[data-apagar]").forEach((form) => {
   }
 
   abrir.addEventListener("click", () => {
-    const clientes = selecionados();
-    if (!clientes.length) return;
+    const pedidos = selecionados();
+    if (!pedidos.length) return;
 
-    const pedidos = clientes.reduce((soma, cliente) => soma + cliente.pedidos, 0);
-    resumo.textContent =
-      "Apagar " + plural(clientes.length, "cliente", "clientes") +
-      " e " + plural(pedidos, "pedido", "pedidos") + "?";
+    resumo.textContent = "Apagar " + plural(pedidos.length, "pedido", "pedidos") + "?";
 
-    lista.replaceChildren(...clientes.map((cliente) => {
+    lista.replaceChildren(...pedidos.map((pedido) => {
       const item = document.createElement("li");
-      item.textContent = cliente.nome + " (" + plural(cliente.pedidos, "pedido", "pedidos") + ")";
+      item.textContent = pedido.codigo + " (" + pedido.nome + ")";
       return item;
     }));
 

@@ -150,10 +150,10 @@
               {% for pedido in pedidos %}
                 <tr>
                   <td class="tabela__marcar">
-                    <input type="checkbox" name="clientes" value="{{ pedido.cliente.id }}"
+                    <input type="checkbox" name="pedidos" value="{{ pedido.id }}"
                            data-nome="{{ pedido.cliente.nome }}"
-                           data-pedidos="{{ pedido.cliente.pedidos|length }}"
-                           aria-label="Selecionar {{ pedido.cliente.nome }}">
+                           data-codigo="{{ pedido.codigo_rastreio }}"
+                           aria-label="Selecionar {{ pedido.codigo_rastreio }}">
                   </td>
                   <td><code>{{ pedido.codigo_rastreio }}</code></td>
                   <td>{{ pedido.cliente.nome }}</td>
