@@ -197,7 +197,17 @@ def importar():
         return redirect(url_for("admin.painel"))
 
     relatorio["arquivo"] = nome_seguro
-    session["ultimo_relatorio"] = relatorio
+
+    # O relatório vai no cookie da sessão, que tem limite de 4 KB. Em planilha
+    # grande a lista completa de erros e códigos gerados passaria disso e o
+    # navegador descartaria o cookie, então só as primeiras linhas vão junto.
+    session["ultimo_relatorio"] = dict(
+        relatorio,
+        total_erros=len(relatorio["erros"]),
+        total_gerados=len(relatorio["codigos_gerados"]),
+        erros=relatorio["erros"][:20],
+        codigos_gerados=relatorio["codigos_gerados"][:5],
+    )
 
     resumo = (
         str(relatorio["adicionados"])

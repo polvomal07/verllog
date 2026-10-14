@@ -68,13 +68,13 @@
             <span>Linhas lidas: <strong>{{ relatorio.total_linhas }}</strong></span>
             <span class="ok">Adicionados: <strong>{{ relatorio.adicionados }}</strong></span>
             <span class="aten">Atualizados: <strong>{{ relatorio.atualizados }}</strong></span>
-            <span class="err">Com erro: <strong>{{ relatorio.erros|length }}</strong></span>
+            <span class="err">Com erro: <strong>{{ relatorio.total_erros }}</strong></span>
           </div>
 
           {% if relatorio.codigos_gerados %}
             <p class="relatorio__gerados">
-              Códigos gerados automaticamente: {{ relatorio.codigos_gerados|length }}
-              {{ relatorio.codigos_gerados[:5]|join(', ') }}{% if relatorio.codigos_gerados|length > 5 %}…{% endif %}
+              Códigos gerados automaticamente: {{ relatorio.total_gerados }}
+              {{ relatorio.codigos_gerados|join(', ') }}{% if relatorio.total_gerados > 5 %}…{% endif %}
             </p>
           {% endif %}
 
@@ -93,6 +93,11 @@
                 {% endfor %}
               </tbody>
             </table>
+            {% if relatorio.total_erros > relatorio.erros|length %}
+              <p class="relatorio__gerados">
+                Mostrando as {{ relatorio.erros|length }} primeiras de {{ relatorio.total_erros }} linhas com erro.
+              </p>
+            {% endif %}
           {% endif %}
         </div>
       {% endif %}

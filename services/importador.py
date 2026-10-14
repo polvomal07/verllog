@@ -14,6 +14,8 @@ from datetime import date, datetime
 from pathlib import Path
 
 import pandas as pd
+from sqlalchemy import delete, insert
+from sqlalchemy.orm import lazyload
 
 from config import Config
 from extensions import db
@@ -201,19 +203,6 @@ def _converter_data(valor):
 # ----------------------------------------------------------------------
 
 
-def _buscar_cliente(dados):
-    """
-    Procura um cliente já cadastrado. O CPF é a chave natural quando existe;
-    sem CPF, cai para nome + cidade.
-    """
-    if dados["cpf"]:
-        cliente = Cliente.query.filter_by(cpf=dados["cpf"]).first()
-        if cliente:
-            return cliente
-
-    return Cliente.query.filter_by(nome=dados["nome"], cidade=dados["cidade"]).first()
-
-
 def _aplicar_dados_cliente(cliente, dados):
     cliente.nome = dados["nome"]
     cliente.cpf = dados["cpf"] or cliente.cpf
@@ -254,7 +243,276 @@ def _regravar_movimentacoes(pedido, cliente):
 
 # ----------------------------------------------------------------------
 # Importação
+#
+# O site roda nos EUA e o banco fica em São Paulo: cada ida e volta ao banco
+# custa perto de 0,2 s. Gravar linha por linha (como era antes) fazia uns 17
+# acessos por pedido, e planilha com mais de umas 40 linhas estourava o tempo
+# limite do servidor. Por isso a importação trabalha em três etapas:
+#
+#   1. valida todas as linhas só em memória, sem tocar no banco;
+#   2. carrega de uma vez os clientes e pedidos que já existem;
+#   3. grava em blocos, com poucas consultas e um único commit por bloco.
+#
+# Se um bloco falhar no banco, só ele é refeito linha a linha, para que a
+# linha ruim vire erro no relatório sem levar as boas junto.
 # ----------------------------------------------------------------------
+
+TAMANHO_DO_BLOCO = 250
+
+
+def _validar_linhas(df, gerar_codigo_se_vazio, relatorio):
+    """
+    Etapa 1: lê e valida cada linha em memória. Devolve as linhas boas, com
+    o código já limpo (os que faltam ficam None para gerar depois).
+    """
+    linhas_validas = []
+    codigos_desta_planilha = set()
+
+    # Colunas que o sistema realmente lê — usadas para detectar linha sem dados.
+    campos_uteis = [c for c in Config.COLUNAS_PLANILHA if c in df.columns]
+
+    for indice, linha in df.iterrows():
+        # +2 porque o Excel conta a partir de 1 e a primeira linha é o cabeçalho.
+        numero_linha = int(indice) + 2
+
+        # Planilha de operação quase sempre termina com dezenas de linhas sem
+        # dados. Elas não são erro do usuário — são só o fim do preenchimento.
+        # Só olhamos os campos que o sistema usa: colunas de controle como
+        # STATUS costumam vir preenchidas até o fim e não significam nada aqui.
+        if all(not _texto(linha.get(campo)) for campo in campos_uteis):
+            relatorio["ignoradas"] += 1
+            continue
+
+        codigo_original = _texto(linha.get("codigo_rastreio")) or "(vazio)"
+
+        try:
+            dados = {
+                "nome": _texto(linha.get("nome")),
+                "cpf": _texto(linha.get("cpf")),
+                "endereco": _texto(linha.get("endereco")),
+                "numero": _texto(linha.get("numero")),
+                "bairro": _texto(linha.get("bairro")),
+                "cidade": _texto(linha.get("cidade")),
+                "estado": _texto(linha.get("estado")).upper()[:2],
+                "cep": _texto(linha.get("cep")),
+            }
+
+            if not dados["nome"]:
+                raise ValueError("nome em branco")
+            if not dados["cidade"] or not dados["estado"]:
+                raise ValueError("cidade ou estado em branco")
+
+            data_cadastro = _converter_data(linha.get("data_cadastro"))
+
+            codigo = gerador_codigo.limpar(linha.get("codigo_rastreio"))
+            if not codigo:
+                if not gerar_codigo_se_vazio:
+                    raise ValueError("código de rastreio em branco")
+                codigo = None  # gerado na etapa 2, quando já se sabe o que existe
+            else:
+                if not gerador_codigo.validar_estrito(codigo):
+                    raise ValueError(
+                        "código inválido ("
+                        + gerador_codigo.motivo_invalido(codigo)
+                        + ")"
+                    )
+                # Grava sempre em maiúsculas: a busca do site normaliza o que o
+                # usuário digita, então o banco precisa estar na mesma caixa.
+                codigo = gerador_codigo.normalizar(codigo)
+                if codigo in codigos_desta_planilha:
+                    raise ValueError("código repetido dentro da própria planilha")
+                codigos_desta_planilha.add(codigo)
+
+        except Exception as erro:
+            relatorio["erros"].append(
+                {"linha": numero_linha, "codigo": codigo_original, "motivo": str(erro)}
+            )
+            continue
+
+        linhas_validas.append(
+            {
+                "numero_linha": numero_linha,
+                "codigo_original": codigo_original,
+                "dados": dados,
+                "data_cadastro": data_cadastro,
+                "codigo": codigo,
+            }
+        )
+
+    return linhas_validas
+
+
+class _Cache:
+    """
+    Etapa 2: tudo o que a importação precisa consultar, carregado em poucas
+    consultas grandes em vez de uma consulta por linha.
+
+    As relações são trocadas para carregamento preguiçoso: sem isso, ler os
+    clientes puxaria junto todos os pedidos e todas as movimentações do banco.
+    """
+
+    def __init__(self, codigos_da_planilha):
+        self.codigos_existentes = set(
+            db.session.execute(db.select(Pedido.codigo_rastreio)).scalars()
+        )
+
+        self.pedidos = {}
+        codigos = [c for c in codigos_da_planilha if c in self.codigos_existentes]
+        for inicio in range(0, len(codigos), 1000):
+            consulta = (
+                db.select(Pedido)
+                .options(lazyload(Pedido.movimentacoes), lazyload(Pedido.cliente))
+                .where(Pedido.codigo_rastreio.in_(codigos[inicio:inicio + 1000]))
+            )
+            for pedido in db.session.execute(consulta).scalars():
+                self.pedidos[pedido.codigo_rastreio] = pedido
+
+        self.pedidos_com_movimentacao = set()
+        ids = [p.id for p in self.pedidos.values()]
+        for inicio in range(0, len(ids), 1000):
+            consulta = (
+                db.select(Movimentacao.pedido_id)
+                .where(Movimentacao.pedido_id.in_(ids[inicio:inicio + 1000]))
+                .distinct()
+            )
+            self.pedidos_com_movimentacao.update(db.session.execute(consulta).scalars())
+
+        # Mesma regra de antes para achar o cliente: CPF quando existe, senão
+        # nome + cidade. Em empate fica o cadastro mais antigo.
+        self.por_cpf = {}
+        self.por_nome_cidade = {}
+        consulta = (
+            db.select(Cliente)
+            .options(lazyload(Cliente.pedidos))
+            .order_by(Cliente.id)
+        )
+        for cliente in db.session.execute(consulta).scalars():
+            if cliente.cpf:
+                self.por_cpf.setdefault(cliente.cpf, cliente)
+            self.por_nome_cidade.setdefault((cliente.nome, cliente.cidade), cliente)
+
+    def buscar_cliente(self, dados):
+        if dados["cpf"] and dados["cpf"] in self.por_cpf:
+            return self.por_cpf[dados["cpf"]]
+        return self.por_nome_cidade.get((dados["nome"], dados["cidade"]))
+
+    def registrar_cliente(self, cliente):
+        """Chamado depois de criar ou alterar um cliente nesta importação."""
+        if cliente.cpf:
+            self.por_cpf[cliente.cpf] = cliente
+        self.por_nome_cidade[(cliente.nome, cliente.cidade)] = cliente
+
+    def gerar_codigo(self, reservados):
+        for _ in range(100):
+            codigo = gerador_codigo.gerar()
+            if codigo not in self.codigos_existentes and codigo not in reservados:
+                reservados.add(codigo)
+                return codigo
+        raise RuntimeError("Não foi possível gerar um código único.")
+
+
+def _gravar_bloco(linhas, cache):
+    """
+    Etapa 3: grava um bloco de linhas já validadas numa única transação.
+    Devolve (adicionados, atualizados). Se algo falhar, levanta a exceção e
+    nada do bloco fica gravado.
+    """
+    # ---- clientes ----------------------------------------------------
+    clientes = []
+    for item in linhas:
+        cliente = cache.buscar_cliente(item["dados"])
+        if cliente is None:
+            cliente = Cliente()
+            db.session.add(cliente)
+        _aplicar_dados_cliente(cliente, item["dados"])
+        cache.registrar_cliente(cliente)
+        clientes.append(cliente)
+
+    db.session.flush()  # INSERT em lote: garante cliente.id
+
+    # ---- pedidos -----------------------------------------------------
+    adicionados = 0
+    atualizados = 0
+    a_regravar = []  # (pedido, cliente, ja_existia)
+
+    for item, cliente in zip(linhas, clientes):
+        codigo = item["codigo"]
+        data_cadastro = item["data_cadastro"]
+        pedido = cache.pedidos.get(codigo)
+
+        if pedido is None:
+            # Pedido novo sem data na planilha entra com a data de hoje:
+            # é quando ele de fato passou a existir no sistema.
+            pedido = Pedido(
+                codigo_rastreio=codigo,
+                cliente_id=cliente.id,
+                data_cadastro=data_cadastro or date.today(),
+            )
+            db.session.add(pedido)
+            a_regravar.append((pedido, cliente, False))
+            adicionados += 1
+        else:
+            # Pedido que já existe SÓ muda de data se a planilha trouxer
+            # uma. Sem isso, reenviar o arquivo completo (o jeito normal
+            # de trabalhar) jogaria todo mundo de volta para o dia zero.
+            data_final = data_cadastro or pedido.data_cadastro
+
+            destino_novo = cliente.cidade + "/" + cliente.estado
+            precisa_regravar = (
+                pedido.destino != destino_novo
+                or pedido.data_cadastro != data_final
+                or pedido.id not in cache.pedidos_com_movimentacao
+            )
+
+            pedido.cliente_id = cliente.id
+            pedido.data_cadastro = data_final
+
+            if precisa_regravar:
+                a_regravar.append((pedido, cliente, True))
+            atualizados += 1
+
+    # ---- timelines ---------------------------------------------------
+    novas_movimentacoes = []
+    for pedido, cliente, _ in a_regravar:
+        eventos = gerar_movimentacoes(
+            pedido.codigo_rastreio,
+            pedido.data_cadastro,
+            cliente.cidade,
+            cliente.estado,
+            cliente.cep,
+        )
+        rota = montar_rota(cliente.cidade, cliente.estado, cliente.cep)
+        pedido.origem = rota["origem"]
+        pedido.destino = rota["destino"]
+        pedido.previsao_entrega = calcular_previsao(eventos)
+        novas_movimentacoes.append((pedido, eventos))
+
+    db.session.flush()  # INSERT/UPDATE dos pedidos em lote: garante pedido.id
+
+    ids_antigos = [pedido.id for pedido, _, ja_existia in a_regravar if ja_existia]
+    if ids_antigos:
+        db.session.execute(
+            delete(Movimentacao).where(Movimentacao.pedido_id.in_(ids_antigos)),
+            execution_options={"synchronize_session": False},
+        )
+
+    registros = [
+        dict(evento, pedido_id=pedido.id)
+        for pedido, eventos in novas_movimentacoes
+        for evento in eventos
+    ]
+    if registros:
+        db.session.execute(insert(Movimentacao), registros)
+
+    db.session.commit()
+
+    # Só depois do commit o cache passa a considerar estes pedidos gravados.
+    for pedido, _, _ in a_regravar:
+        cache.codigos_existentes.add(pedido.codigo_rastreio)
+        cache.pedidos[pedido.codigo_rastreio] = pedido
+        cache.pedidos_com_movimentacao.add(pedido.id)
+
+    return adicionados, atualizados
 
 
 def importar_planilha(caminho_arquivo, gerar_codigo_se_vazio=True):
@@ -293,123 +551,62 @@ def importar_planilha(caminho_arquivo, gerar_codigo_se_vazio=True):
         "codigos_gerados": [],
     }
 
-    codigos_desta_planilha = set()
+    linhas = _validar_linhas(df, gerar_codigo_se_vazio, relatorio)
 
-    # Colunas que o sistema realmente lê — usadas para detectar linha sem dados.
-    campos_uteis = [c for c in Config.COLUNAS_PLANILHA if c in df.columns]
+    codigos_da_planilha = {item["codigo"] for item in linhas if item["codigo"]}
+    cache = _Cache(codigos_da_planilha)
 
-    for indice, linha in df.iterrows():
-        # +2 porque o Excel conta a partir de 1 e a primeira linha é o cabeçalho.
-        numero_linha = int(indice) + 2
+    reservados = set(codigos_da_planilha)
+    for item in linhas:
+        if item["codigo"] is None:
+            item["codigo"] = cache.gerar_codigo(reservados)
+            relatorio["codigos_gerados"].append(item["codigo"])
 
-        # Planilha de operação quase sempre termina com dezenas de linhas sem
-        # dados. Elas não são erro do usuário — são só o fim do preenchimento.
-        # Só olhamos os campos que o sistema usa: colunas de controle como
-        # STATUS costumam vir preenchidas até o fim e não significam nada aqui.
-        if all(not _texto(linha.get(campo)) for campo in campos_uteis):
-            relatorio["ignoradas"] += 1
-            continue
+    # Depois de cada commit o SQLAlchemy marcaria clientes e pedidos como
+    # desatualizados e voltaria ao banco para reler um por um no bloco
+    # seguinte. Durante a importação só ela mexe nesses registros, então o
+    # que está em memória continua valendo.
+    sessao = db.session()
+    expirar_antes = sessao.expire_on_commit
+    sessao.expire_on_commit = False
+    try:
+        for inicio in range(0, len(linhas), TAMANHO_DO_BLOCO):
+            bloco = linhas[inicio:inicio + TAMANHO_DO_BLOCO]
+            try:
+                adicionados, atualizados = _gravar_bloco(bloco, cache)
+                relatorio["adicionados"] += adicionados
+                relatorio["atualizados"] += atualizados
+                continue
+            except Exception:
+                db.session.rollback()
 
-        try:
-            dados = {
-                "nome": _texto(linha.get("nome")),
-                "cpf": _texto(linha.get("cpf")),
-                "endereco": _texto(linha.get("endereco")),
-                "numero": _texto(linha.get("numero")),
-                "bairro": _texto(linha.get("bairro")),
-                "cidade": _texto(linha.get("cidade")),
-                "estado": _texto(linha.get("estado")).upper()[:2],
-                "cep": _texto(linha.get("cep")),
-            }
-
-            if not dados["nome"]:
-                raise ValueError("nome em branco")
-            if not dados["cidade"] or not dados["estado"]:
-                raise ValueError("cidade ou estado em branco")
-
-            data_cadastro = _converter_data(linha.get("data_cadastro"))
-
-            # ---- código de rastreio ------------------------------------
-            codigo = gerador_codigo.limpar(linha.get("codigo_rastreio"))
-
-            if not codigo:
-                if not gerar_codigo_se_vazio:
-                    raise ValueError("código de rastreio em branco")
-                # gerar_unico já registra o código em codigos_desta_planilha,
-                # então a checagem de duplicidade abaixo não se aplica a ele.
-                codigo = gerador_codigo.gerar_unico(codigos_desta_planilha)
-                relatorio["codigos_gerados"].append(codigo)
-            else:
-                if not gerador_codigo.validar_estrito(codigo):
-                    raise ValueError(
-                        "código inválido ("
-                        + gerador_codigo.motivo_invalido(codigo)
-                        + ")"
+            # O bloco falhou no banco. O rollback deixou o cache com objetos que
+            # nunca foram gravados, então ele é recarregado e o bloco é refeito
+            # uma linha por vez para isolar a(s) linha(s) problemática(s).
+            cache = _Cache(codigos_da_planilha)
+            for item in bloco:
+                try:
+                    adicionados, atualizados = _gravar_bloco([item], cache)
+                    relatorio["adicionados"] += adicionados
+                    relatorio["atualizados"] += atualizados
+                except Exception as erro:
+                    db.session.rollback()
+                    cache = _Cache(codigos_da_planilha)
+                    relatorio["erros"].append(
+                        {
+                            "linha": item["numero_linha"],
+                            "codigo": item["codigo_original"],
+                            "motivo": str(erro).splitlines()[0],
+                        }
                     )
-                # Grava sempre em maiúsculas: a busca do site normaliza o que o
-                # usuário digita, então o banco precisa estar na mesma caixa.
-                codigo = gerador_codigo.normalizar(codigo)
-                if codigo in codigos_desta_planilha:
-                    raise ValueError("código repetido dentro da própria planilha")
-                codigos_desta_planilha.add(codigo)
+    finally:
+        sessao.expire_on_commit = expirar_antes
 
-            # ---- cliente -----------------------------------------------
-            cliente = _buscar_cliente(dados)
-            if cliente is None:
-                cliente = Cliente()
-                db.session.add(cliente)
-            _aplicar_dados_cliente(cliente, dados)
-            db.session.flush()  # garante cliente.id
+    relatorio["erros"].sort(key=lambda erro: erro["linha"])
 
-            # ---- pedido ------------------------------------------------
-            pedido = Pedido.query.filter_by(codigo_rastreio=codigo).first()
-
-            if pedido is None:
-                # Pedido novo sem data na planilha entra com a data de hoje:
-                # é quando ele de fato passou a existir no sistema.
-                pedido = Pedido(
-                    codigo_rastreio=codigo,
-                    cliente_id=cliente.id,
-                    data_cadastro=data_cadastro or date.today(),
-                )
-                db.session.add(pedido)
-                db.session.flush()
-                _regravar_movimentacoes(pedido, cliente)
-                relatorio["adicionados"] += 1
-            else:
-                # Pedido que já existe SÓ muda de data se a planilha trouxer
-                # uma. Sem isso, reenviar o arquivo completo (o jeito normal
-                # de trabalhar) jogaria todo mundo de volta para o dia zero.
-                data_final = data_cadastro or pedido.data_cadastro
-
-                destino_novo = cliente.cidade + "/" + cliente.estado
-                precisa_regravar = (
-                    pedido.destino != destino_novo
-                    or pedido.data_cadastro != data_final
-                    or not pedido.movimentacoes
-                )
-
-                pedido.cliente_id = cliente.id
-                pedido.data_cadastro = data_final
-
-                if precisa_regravar:
-                    _regravar_movimentacoes(pedido, cliente)
-
-                relatorio["atualizados"] += 1
-
-            # Cada linha é confirmada individualmente: um erro na linha 7 não
-            # desfaz as seis linhas boas que vieram antes.
-            db.session.commit()
-
-        except Exception as erro:
-            db.session.rollback()
-            relatorio["erros"].append(
-                {
-                    "linha": numero_linha,
-                    "codigo": _texto(linha.get("codigo_rastreio")) or "(vazio)",
-                    "motivo": str(erro),
-                }
-            )
-            continue
+    # Os objetos carregados aqui vieram com as relações em modo preguiçoso;
+    # tirá-los da sessão evita que alguém os reaproveite achando que vieram
+    # completos.
+    db.session.expunge_all()
 
     return relatorio
