@@ -485,6 +485,14 @@
 .link-tabela { color: var(--cor-azul); text-decoration: none; font-weight: 600; }
 .link-tabela:hover { text-decoration: underline; }
 
+/* Botão "copiar link" com cara de link, ao lado do "ver" */
+.botao-copiar {
+  background: none; border: 0; padding: 0; margin-left: 12px;
+  font: inherit; font-weight: 600; cursor: pointer;
+}
+.botao-copiar--ok { color: var(--cor-sucesso); }
+.tabela__acoes { white-space: nowrap; }
+
 .tabela__marcar { width: 1%; padding-right: 0 !important; }
 .tabela__marcar input { width: 17px; height: 17px; cursor: pointer; accent-color: var(--cor-erro); }
 

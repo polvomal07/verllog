@@ -89,3 +89,54 @@ document.querySelectorAll("form[data-apagar]").forEach((form) => {
 
   atualizar();
 });
+
+/* ==========================================================================
+   Copiar link do rastreio
+
+   O link montado aqui abre a página pública já com o resultado do código
+   (/rastreamento?codigo=...). O endereço vem do próprio navegador, então
+   sai sempre com o domínio em uso (verllog.com).
+   ========================================================================== */
+
+function copiarTexto(texto) {
+  if (navigator.clipboard && window.isSecureContext) {
+    return navigator.clipboard.writeText(texto);
+  }
+  // Navegadores antigos ou página sem HTTPS: copia por um campo escondido.
+  const campo = document.createElement("textarea");
+  campo.value = texto;
+  campo.setAttribute("readonly", "");
+  campo.style.position = "fixed";
+  campo.style.opacity = "0";
+  document.body.appendChild(campo);
+  campo.select();
+  const deuCerto = document.execCommand("copy");
+  campo.remove();
+  return deuCerto ? Promise.resolve() : Promise.reject(new Error("cópia recusada"));
+}
+
+document.querySelectorAll("[data-copiar-link]").forEach((botao) => {
+  const textoOriginal = botao.textContent;
+  let espera;
+
+  botao.addEventListener("click", () => {
+    const link = new URL(botao.dataset.copiarLink, window.location.origin).href;
+
+    copiarTexto(link)
+      .then(() => {
+        botao.textContent = "copiado!";
+        botao.classList.add("botao-copiar--ok");
+      })
+      .catch(() => {
+        // Sem permissão de área de transferência: mostra o link para copiar à mão.
+        window.prompt("Copie o link:", link);
+      })
+      .finally(() => {
+        clearTimeout(espera);
+        espera = setTimeout(() => {
+          botao.textContent = textoOriginal;
+          botao.classList.remove("botao-copiar--ok");
+        }, 1800);
+      });
+  });
+});

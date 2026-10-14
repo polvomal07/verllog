@@ -176,9 +176,11 @@
                       {{ pedido.previsao_entrega.strftime('%d/%m/%Y') }}
                     {% else %}não definida{% endif %}
                   </td>
-                  <td>
+                  <td class="tabela__acoes">
                     <a class="link-tabela"
                        href="{{ url_for('admin.detalhe_pedido', codigo=pedido.codigo_rastreio) }}">ver</a>
+                    <button type="button" class="link-tabela botao-copiar"
+                            data-copiar-link="{{ url_for('publico.rastreamento', codigo=pedido.codigo_rastreio) }}">copiar link</button>
                   </td>
                 </tr>
               {% endfor %}
