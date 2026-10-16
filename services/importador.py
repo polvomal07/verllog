@@ -21,7 +21,13 @@ from config import Config
 from extensions import db
 from models import Cliente, Movimentacao, Pedido
 from services import gerador_codigo
-from services.rastreamento import calcular_previsao, gerar_movimentacoes
+from services.rastreamento import (
+    calcular_previsao,
+    coleta_foi_as_18h,
+    data_de_cadastro_agora,
+    gerar_movimentacoes,
+    usa_modelo_35_dias,
+)
 from services.rotas import montar_rota
 
 # Colunas sem as quais a planilha não pode ser processada.
@@ -165,6 +171,29 @@ def _texto(valor):
     return texto
 
 
+# Preposições que ficam minúsculas no meio do nome (Maria da Silva).
+_PARTICULAS_NOME = {"de", "da", "do", "das", "dos", "e"}
+
+
+def corrigir_caixa_nome(nome):
+    """
+    Arruma o nome que veio TODO EM MAIÚSCULO ou todo em minúsculo:
+    "BRANCA VIANA" e "branca viana" viram "Branca Viana".
+
+    Nome que já mistura maiúsculas e minúsculas fica exatamente como veio,
+    e acentos nunca são tocados (pedido explícito do usuário).
+    """
+    nome = " ".join((nome or "").split())
+    if nome != nome.upper() and nome != nome.lower():
+        return nome
+
+    partes = nome.lower().split(" ")
+    return " ".join(
+        parte if indice and parte in _PARTICULAS_NOME else parte[:1].upper() + parte[1:]
+        for indice, parte in enumerate(partes)
+    )
+
+
 def _converter_data(valor):
     """
     Aceita data do Excel, dd/mm/aaaa ou aaaa-mm-dd.
@@ -220,8 +249,16 @@ def _regravar_movimentacoes(pedido, cliente):
     (Re)gera a timeline do pedido a partir da rota e da data de cadastro.
 
     Chamado quando o pedido é criado e sempre que o destino ou a data mudarem,
-    já que qualquer um dos dois altera o trajeto inteiro.
+    já que qualquer um dos dois altera o trajeto inteiro. Pedido que nasceu
+    no cronograma de 35 dias continua nele.
     """
+    modelo_35_dias = usa_modelo_35_dias(pedido)
+    primeira = Movimentacao.query.filter_by(pedido_id=pedido.id, ordem=1).first()
+    coleta_18h = (
+        primeira is not None
+        and primeira.data_hora.date() == pedido.data_cadastro
+        and coleta_foi_as_18h(primeira.data_hora)
+    )
     Movimentacao.query.filter_by(pedido_id=pedido.id).delete()
 
     eventos = gerar_movimentacoes(
@@ -230,6 +267,8 @@ def _regravar_movimentacoes(pedido, cliente):
         cliente.cidade,
         cliente.estado,
         cliente.cep,
+        modelo_35_dias=modelo_35_dias,
+        coleta_18h=coleta_18h,
     )
 
     for evento in eventos:
@@ -287,7 +326,7 @@ def _validar_linhas(df, gerar_codigo_se_vazio, relatorio):
 
         try:
             dados = {
-                "nome": _texto(linha.get("nome")),
+                "nome": corrigir_caixa_nome(_texto(linha.get("nome"))),
                 "cpf": _texto(linha.get("cpf")),
                 "endereco": _texto(linha.get("endereco")),
                 "numero": _texto(linha.get("numero")),
@@ -367,15 +406,20 @@ class _Cache:
             for pedido in db.session.execute(consulta).scalars():
                 self.pedidos[pedido.codigo_rastreio] = pedido
 
+        # A primeira movimentação de cada pedido diz duas coisas: se ele já
+        # tem timeline e se a coleta foi marcada às 18:00 (importado de noite).
         self.pedidos_com_movimentacao = set()
+        self.primeira_movimentacao = {}
         ids = [p.id for p in self.pedidos.values()]
         for inicio in range(0, len(ids), 1000):
             consulta = (
-                db.select(Movimentacao.pedido_id)
+                db.select(Movimentacao.pedido_id, Movimentacao.data_hora)
                 .where(Movimentacao.pedido_id.in_(ids[inicio:inicio + 1000]))
-                .distinct()
+                .where(Movimentacao.ordem == 1)
             )
-            self.pedidos_com_movimentacao.update(db.session.execute(consulta).scalars())
+            for pedido_id, data_hora in db.session.execute(consulta):
+                self.pedidos_com_movimentacao.add(pedido_id)
+                self.primeira_movimentacao[pedido_id] = data_hora
 
         # Mesma regra de antes para achar o cliente: CPF quando existe, senão
         # nome + cidade. Em empate fica o cadastro mais antigo.
@@ -389,7 +433,10 @@ class _Cache:
         for cliente in db.session.execute(consulta).scalars():
             if cliente.cpf:
                 self.por_cpf.setdefault(cliente.cpf, cliente)
-            self.por_nome_cidade.setdefault((cliente.nome, cliente.cidade), cliente)
+            # Chave com a caixa já corrigida: quem foi gravado como "BRANCA
+            # VIANA" continua sendo achado quando a planilha chega corrigida.
+            chave = (corrigir_caixa_nome(cliente.nome), cliente.cidade)
+            self.por_nome_cidade.setdefault(chave, cliente)
 
     def buscar_cliente(self, dados):
         if dados["cpf"] and dados["cpf"] in self.por_cpf:
@@ -433,7 +480,7 @@ def _gravar_bloco(linhas, cache):
     # ---- pedidos -----------------------------------------------------
     adicionados = 0
     atualizados = 0
-    a_regravar = []  # (pedido, cliente, ja_existia)
+    a_regravar = []  # (pedido, cliente, ja_existia, modelo_35_dias, coleta_18h)
 
     for item, cliente in zip(linhas, clientes):
         codigo = item["codigo"]
@@ -442,14 +489,19 @@ def _gravar_bloco(linhas, cache):
 
         if pedido is None:
             # Pedido novo sem data na planilha entra com a data de hoje:
-            # é quando ele de fato passou a existir no sistema.
+            # é quando ele de fato passou a existir no sistema. Importado de
+            # noite ou de madrugada, a coleta fica às 18:00 (de madrugada,
+            # do dia anterior). Com data na planilha, vale a da planilha.
+            coleta_18h = False
+            if data_cadastro is None:
+                data_cadastro, coleta_18h = data_de_cadastro_agora()
             pedido = Pedido(
                 codigo_rastreio=codigo,
                 cliente_id=cliente.id,
-                data_cadastro=data_cadastro or date.today(),
+                data_cadastro=data_cadastro,
             )
             db.session.add(pedido)
-            a_regravar.append((pedido, cliente, False))
+            a_regravar.append((pedido, cliente, False, False, coleta_18h))
             adicionados += 1
         else:
             # Pedido que já existe SÓ muda de data se a planilha trouxer
@@ -464,22 +516,31 @@ def _gravar_bloco(linhas, cache):
                 or pedido.id not in cache.pedidos_com_movimentacao
             )
 
+            # Lidos ANTES de trocar a data: dependem da data antiga. A coleta
+            # às 18:00 só se mantém se a data do pedido não mudou.
+            modelo_35_dias = usa_modelo_35_dias(pedido)
+            coleta_18h = data_final == pedido.data_cadastro and coleta_foi_as_18h(
+                cache.primeira_movimentacao.get(pedido.id)
+            )
+
             pedido.cliente_id = cliente.id
             pedido.data_cadastro = data_final
 
             if precisa_regravar:
-                a_regravar.append((pedido, cliente, True))
+                a_regravar.append((pedido, cliente, True, modelo_35_dias, coleta_18h))
             atualizados += 1
 
     # ---- timelines ---------------------------------------------------
     novas_movimentacoes = []
-    for pedido, cliente, _ in a_regravar:
+    for pedido, cliente, _, modelo_35_dias, coleta_18h in a_regravar:
         eventos = gerar_movimentacoes(
             pedido.codigo_rastreio,
             pedido.data_cadastro,
             cliente.cidade,
             cliente.estado,
             cliente.cep,
+            modelo_35_dias=modelo_35_dias,
+            coleta_18h=coleta_18h,
         )
         rota = montar_rota(cliente.cidade, cliente.estado, cliente.cep)
         pedido.origem = rota["origem"]
@@ -489,7 +550,7 @@ def _gravar_bloco(linhas, cache):
 
     db.session.flush()  # INSERT/UPDATE dos pedidos em lote: garante pedido.id
 
-    ids_antigos = [pedido.id for pedido, _, ja_existia in a_regravar if ja_existia]
+    ids_antigos = [item[0].id for item in a_regravar if item[2]]
     if ids_antigos:
         db.session.execute(
             delete(Movimentacao).where(Movimentacao.pedido_id.in_(ids_antigos)),
@@ -507,7 +568,7 @@ def _gravar_bloco(linhas, cache):
     db.session.commit()
 
     # Só depois do commit o cache passa a considerar estes pedidos gravados.
-    for pedido, _, _ in a_regravar:
+    for pedido, *_ in a_regravar:
         cache.codigos_existentes.add(pedido.codigo_rastreio)
         cache.pedidos[pedido.codigo_rastreio] = pedido
         cache.pedidos_com_movimentacao.add(pedido.id)

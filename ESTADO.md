@@ -48,9 +48,11 @@ segundo plano, e o computador pode ficar desligado por semanas.
 | Código de rastreio | 2 letras + 12 números + 1 letra | `config.py` → `CODIGO_REGEX` |
 | Códigos antigos fora do padrão | aceitos | `config.py` → `ACEITAR_CODIGOS_LEGADOS` |
 | Origem de todas as rotas | Manaus/AM | `services/rotas.py` → `CENTRO_MATRIZ` |
-| Duração do ciclo | 35 dias | `config.py` → `CRONOGRAMA` |
-| Tentativa frustrada | dia 28 | `config.py` → `CRONOGRAMA` |
-| Nova tentativa | dia 30 | `config.py` → `CRONOGRAMA` |
+| Duração do ciclo (pedidos novos) | 45 dias | `config.py` → `DIAS_ATUALIZACAO_45` |
+| Ritmo das atualizações | diária nos dias 0 a 9, depois a cada 2 dias | `config.py` → `DIAS_ATUALIZACAO_45` |
+| Trânsito entre estados | mínimo 2 dias | `config.py` → `DIAS_EM_TRANSITO` |
+| Pedidos cadastrados antes de out/2026 | continuam no ciclo de 35 dias | `config.py` → `CRONOGRAMA` |
+| Nome todo em maiúsculo/minúsculo | corrigido na importação | `services/importador.py` → `corrigir_caixa_nome` |
 | Cliente vê | só o que já aconteceu | `services/rastreamento.py` |
 | Previsão de entrega | oculta no site, visível no painel | `templates/rastreamento.html` |
 
@@ -59,7 +61,46 @@ os pedidos existentes.
 
 ---
 
-## Cronograma da entrega
+## Cronograma da entrega (45 dias, pedidos novos)
+
+Exemplo Belo Horizonte/MG (Manaus > Campinas > Varginha > BH):
+
+```
+dia  0   Objeto coletado                            Manaus/AM
+dia  1   Objeto recebido na unidade de origem       Manaus/AM
+dia  2   Objeto em triagem                          Manaus/AM
+dia  3   Objeto liberado para transporte            Manaus/AM
+dia  4   Em transferência                           Manaus/AM
+dia 5-6  Em trânsito (2 dias)                       Manaus/AM > Campinas/SP
+dia  7   Objeto recebido no centro de distribuição  Campinas/SP
+dia  8   Objeto em triagem                          Campinas/SP
+dia  9   Objeto liberado para transporte            Campinas/SP
+dia 11   Em transferência                           Campinas/SP
+dia 13   Em trânsito                                Campinas/SP > Varginha/MG
+dia 15   Objeto recebido no centro de distribuição  Varginha/MG
+dia 17   Objeto em triagem                          Varginha/MG
+dia 19   Objeto liberado para transporte            Varginha/MG
+dia 21   Em transferência                           Varginha/MG
+dia 23   Em trânsito                                Varginha/MG > Belo Horizonte/MG
+dia 25   Centro de distribuição                     Belo Horizonte/MG
+dia 27   Objeto em triagem                          Belo Horizonte/MG
+dia 29   Unidade de destino                         cidade destino
+dia 31   Objeto em conferência                      cidade destino
+dia 33   Aguardando roteirização                    cidade destino
+dia 35   Saiu para entrega                          cidade destino
+dia 37   Tentativa de entrega não realizada         cidade destino
+dia 39   Aguardando nova tentativa                  cidade destino
+dia 41   Nova tentativa de entrega                  cidade destino
+dia 43   Saiu para entrega                          cidade destino
+dia 45   Entregue                                   cidade destino
+```
+
+Os dias 29 a 45 são fixos. Rotas mais curtas que a de MG ganham
+atualizações de espera nos centros (processamento, conferência,
+consolidação...) para manter o mesmo ritmo. Pedido já gravado no ciclo de
+35 dias (previsão = cadastro + 35) continua nele ao ser regravado.
+
+## Cronograma antigo (35 dias, pedidos anteriores)
 
 ```
 dia  0   Pedido postado                       Manaus/AM

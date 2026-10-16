@@ -138,17 +138,52 @@ class Config:
     # trajeto todo continua terminando em DURACAO_TOTAL_DIAS.
     JANELA_TRANSFERENCIA = (6, 20)
 
-    # Fluxo de status, na ordem. Alterar esta lista muda a timeline inteira.
+    # ------------------------------------------------------------------
+    # Cronograma de 45 dias (out/2026)
+    #
+    # Vale para todo pedido NOVO. Os pedidos que já estavam no banco seguem
+    # no cronograma de 35 dias acima, para ninguém mudar de etapa de repente.
+    #
+    # Dias 0 a 9: uma atualização por dia. Do dia 11 ao 45: uma a cada 2
+    # dias. Entre estados o objeto fica pelo menos 2 dias em trânsito.
+    # As 9 últimas etapas (unidade de destino até a entrega) são fixas nos
+    # dias 29 a 45; o que vem antes se ajusta ao tamanho da rota.
+    # ------------------------------------------------------------------
+    DURACAO_TOTAL_DIAS_45 = 45
+    DIAS_ATUALIZACAO_45 = list(range(0, 10)) + list(range(11, 46, 2))
+    DIAS_EM_TRANSITO = 2
+
+    # Pedido importado de noite ou de madrugada (horário de Brasília) tem a
+    # primeira atualização às 18:00. De madrugada, vale o dia anterior.
+    # Brasília não tem horário de verão desde 2019: UTC-3 fixo.
+    FUSO_BRASILIA_UTC = -3
+    HORA_INICIO_NOITE = 18
+    HORA_FIM_MADRUGADA = 6
+    HORA_COLETA_NOITE = 18
+
+    # Fluxo de status, na ordem (usado só para listar contagens no terminal).
     FLUXO_STATUS = [
         "Pedido postado",
         "Pedido processado",
         "Objeto coletado",
+        "Objeto recebido na unidade de origem",
+        "Objeto em triagem",
+        "Objeto em processamento",
+        "Objeto em conferência",
+        "Objeto em separação",
+        "Consolidação de carga",
+        "Aguardando transferência",
+        "Objeto liberado para transporte",
         "Em transferência",
+        "Em trânsito",
+        "Objeto recebido no centro de distribuição",
         "Centro de distribuição",
         "Unidade de destino",
-        "Tentativa de entrega não realizada",
-        "Nova tentativa de entrega",
+        "Aguardando roteirização",
         "Saiu para entrega",
+        "Tentativa de entrega não realizada",
+        "Aguardando nova tentativa",
+        "Nova tentativa de entrega",
         "Entregue",
     ]
     STATUS_FINAL = "Entregue"
