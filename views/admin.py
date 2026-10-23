@@ -22,6 +22,8 @@ from flask import (
 )
 from werkzeug.utils import secure_filename
 
+from sqlalchemy.orm import joinedload
+
 from config import Config
 from extensions import db
 from models import Cliente, Pedido
@@ -109,12 +111,24 @@ def _montar_estatisticas(pedidos):
     }
 
 
+# Traz o cliente na MESMA consulta dos pedidos. Sem isso, cada linha da
+# tabela buscava o seu cliente separadamente: com o banco em São Paulo e o
+# site em Oregon, mil pedidos levavam quase três minutos para abrir o painel.
+# O lazyload impede que, ao trazer o cliente, venham junto de novo todos os
+# pedidos dele e as movimentações desses pedidos.
+_COM_CLIENTE = (joinedload(Pedido.cliente).lazyload(Cliente.pedidos),)
+
+
 @admin_bp.route("/")
 @login_obrigatorio
 def painel():
     busca = request.args.get("busca", "").strip()
 
-    todos = Pedido.query.order_by(Pedido.id.desc()).all()
+    todos = (
+        Pedido.query.options(*_COM_CLIENTE)
+        .order_by(Pedido.id.desc())
+        .all()
+    )
     estatisticas = _montar_estatisticas(todos)
 
     # A busca aceita código, nome do cliente ou cidade.
@@ -232,7 +246,12 @@ def _pedidos_marcados():
     ids = {int(valor) for valor in request.form.getlist("pedidos") if valor.isdigit()}
     if not ids:
         return []
-    return Pedido.query.filter(Pedido.id.in_(ids)).order_by(Pedido.id.desc()).all()
+    return (
+        Pedido.query.options(*_COM_CLIENTE)
+        .filter(Pedido.id.in_(ids))
+        .order_by(Pedido.id.desc())
+        .all()
+    )
 
 
 def _voltar_ao_painel():
