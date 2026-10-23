@@ -166,8 +166,8 @@
                   <td>{{ pedido.cliente.estado }}</td>
                   <td>
                     <span class="etiqueta etiqueta--pequena
-                      {% if pedido.entregue %}etiqueta--entregue{% endif %}">
-                      {{ pedido.status_atual }}
+                      {% if status[pedido.id] == 'Entregue' %}etiqueta--entregue{% endif %}">
+                      {{ status[pedido.id] }}
                     </span>
                   </td>
                   <td>{{ pedido.data_cadastro.strftime('%d/%m/%Y') }}</td>

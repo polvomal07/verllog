@@ -22,11 +22,12 @@ from flask import (
 )
 from werkzeug.utils import secure_filename
 
-from sqlalchemy.orm import joinedload
+from sqlalchemy import func
+from sqlalchemy.orm import joinedload, lazyload
 
 from config import Config
 from extensions import db
-from models import Cliente, Pedido
+from models import Cliente, Movimentacao, Pedido
 from services import gerador_codigo
 from services.exportador_pdf import gerar_pdf
 from services.importador import ErroDePlanilha, importar_planilha
@@ -82,7 +83,7 @@ def logout():
 # ----------------------------------------------------------------------
 
 
-def _montar_estatisticas(pedidos):
+def _montar_estatisticas(pedidos, status):
     """
     Conta os pedidos por status.
 
@@ -92,7 +93,7 @@ def _montar_estatisticas(pedidos):
     """
     contagem = {}
     for pedido in pedidos:
-        contagem[pedido.status_atual] = contagem.get(pedido.status_atual, 0) + 1
+        contagem[status[pedido.id]] = contagem.get(status[pedido.id], 0) + 1
 
     hoje = date.today()
 
@@ -119,17 +120,55 @@ def _montar_estatisticas(pedidos):
 _COM_CLIENTE = (joinedload(Pedido.cliente).lazyload(Cliente.pedidos),)
 
 
+def _status_dos_pedidos():
+    """
+    Status atual de cada pedido, {pedido_id: status}, calculado pelo banco.
+
+    Mesma regra de Pedido.status_atual: a última movimentação que já
+    aconteceu ou, se nenhuma aconteceu ainda, a primeira. Carregar as
+    movimentações de todos os pedidos para isso (45 por pedido) deixava o
+    painel lento; aqui o banco devolve uma linha por pedido.
+    """
+    agora = datetime.now()
+
+    def status_na_ordem(ordem_por_pedido):
+        alvo = ordem_por_pedido.subquery()
+        linhas = db.session.query(Movimentacao.pedido_id, Movimentacao.status).join(
+            alvo,
+            (Movimentacao.pedido_id == alvo.c.pedido_id)
+            & (Movimentacao.ordem == alvo.c.ordem),
+        )
+        return dict(linhas.all())
+
+    ultima_ocorrida = status_na_ordem(
+        db.session.query(
+            Movimentacao.pedido_id, func.max(Movimentacao.ordem).label("ordem")
+        )
+        .filter(Movimentacao.data_hora <= agora)
+        .group_by(Movimentacao.pedido_id)
+    )
+    primeira = status_na_ordem(
+        db.session.query(
+            Movimentacao.pedido_id, func.min(Movimentacao.ordem).label("ordem")
+        ).group_by(Movimentacao.pedido_id)
+    )
+    return {**primeira, **ultima_ocorrida}
+
+
 @admin_bp.route("/")
 @login_obrigatorio
 def painel():
     busca = request.args.get("busca", "").strip()
 
     todos = (
-        Pedido.query.options(*_COM_CLIENTE)
+        Pedido.query.options(*_COM_CLIENTE, lazyload(Pedido.movimentacoes))
         .order_by(Pedido.id.desc())
         .all()
     )
-    estatisticas = _montar_estatisticas(todos)
+    status = _status_dos_pedidos()
+    for pedido in todos:
+        status.setdefault(pedido.id, "Pedido postado")
+    estatisticas = _montar_estatisticas(todos, status)
 
     # A busca aceita código, nome do cliente ou cidade.
     if busca:
@@ -141,7 +180,7 @@ def painel():
             if codigo_buscado and codigo_buscado in p.codigo_rastreio
             or alvo in p.cliente.nome.lower()
             or alvo in p.cliente.cidade.lower()
-            or alvo in p.status_atual.lower()
+            or alvo in status[p.id].lower()
         ]
     else:
         pedidos = todos
@@ -149,6 +188,7 @@ def painel():
     return render_template(
         "admin/painel.html",
         pedidos=pedidos,
+        status=status,
         estatisticas=estatisticas,
         busca=busca,
         relatorio=session.pop("ultimo_relatorio", None),
