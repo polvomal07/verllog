@@ -273,6 +273,42 @@ def _montar_sequencia_35(rota):
     ]
 
 
+# Horários das 4 etapas encurtadas (unidade de destino, conferência,
+# roteirização e saída para entrega), em pares (dia relativo, hora).
+_HORARIOS_SAIDA_ADIANTADA = [
+    (-1, time(14, 16)),
+    (-1, time(17, 30)),
+    (0, time(7, 10)),
+    (0, time(8, 5)),
+]
+
+
+def _adiantar_saida_para_entrega(sequencia, dia_saida):
+    """
+    Encurta o final do cronograma para o 1º "Saiu para entrega" cair em
+    `dia_saida` (dias após o cadastro). O que vem antes da unidade de
+    destino fica igual; o que vem depois da saída segue de 2 em 2 dias.
+    Devolve (sequencia, horas_fixas por ordem). Se não couber, não mexe.
+    """
+    status = [etapa[0] for etapa in sequencia]
+    if "Saiu para entrega" not in status:
+        return sequencia, {}
+    indice_saida = status.index("Saiu para entrega")
+    inicio = indice_saida - len(_HORARIOS_SAIDA_ADIANTADA) + 1
+    if inicio <= 0 or sequencia[inicio - 1][3] >= dia_saida - 1:
+        return sequencia, {}
+
+    nova = list(sequencia[:inicio])
+    horas = {}
+    for posicao, (relativo, hora) in enumerate(_HORARIOS_SAIDA_ADIANTADA):
+        st, local, descricao, _ = sequencia[inicio + posicao]
+        nova.append((st, local, descricao, dia_saida + relativo))
+        horas[inicio + posicao + 1] = hora
+    for passo, (st, local, descricao, _) in enumerate(sequencia[indice_saida + 1:], 1):
+        nova.append((st, local, descricao, dia_saida + 2 * passo))
+    return nova, horas
+
+
 def gerar_movimentacoes(
     codigo_rastreio,
     data_cadastro,
@@ -300,11 +336,20 @@ def gerar_movimentacoes(
     else:
         sequencia = _montar_sequencia_45(rota)
 
+    horas_fixas = {}
+    saida = Config.SAIU_PARA_ENTREGA_EM.get(codigo_rastreio)
+    if saida and not modelo_35_dias:
+        sequencia, horas_fixas = _adiantar_saida_para_entrega(
+            sequencia, (saida - data_cadastro).days
+        )
+
     eventos = []
     for indice, (status, local, descricao, dias) in enumerate(sequencia):
         ordem = indice + 1
         dia = data_cadastro + timedelta(days=dias)
-        if ordem == 1 and coleta_18h:
+        if ordem in horas_fixas:
+            hora = horas_fixas[ordem]
+        elif ordem == 1 and coleta_18h:
             hora = HORA_COLETA_NOITE
         else:
             hora = _hora_deterministica(codigo_rastreio, ordem)

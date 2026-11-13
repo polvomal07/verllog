@@ -7,6 +7,7 @@ intervalo de dias entre cada etapa da entrega.
 """
 
 import os
+from datetime import date
 from pathlib import Path
 
 # Pasta raiz do projeto (onde este arquivo está).
@@ -152,6 +153,14 @@ class Config:
     DURACAO_TOTAL_DIAS_45 = 45
     DIAS_ATUALIZACAO_45 = list(range(0, 10)) + list(range(11, 46, 2))
     DIAS_EM_TRANSITO = 2
+
+    # Pedidos com "Saiu para entrega" adiantado para uma data fixa (pedido
+    # explícito, só para estes códigos). O histórico até a triagem no centro
+    # de destino segue igual; o final é encurtado para a saída para entrega
+    # cair na data indicada, e depois o fluxo continua de 2 em 2 dias.
+    SAIU_PARA_ENTREGA_EM = {
+        "BR692847103526K": date(2026, 11, 13),
+    }
 
     # Pedido importado de noite ou de madrugada (horário de Brasília) tem a
     # primeira atualização às 18:00. De madrugada, vale o dia anterior.
