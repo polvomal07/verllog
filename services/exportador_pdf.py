@@ -49,19 +49,53 @@ class _Documento(FPDF):
         self.set_author(Config.EMPRESA_NOME)
 
     def header(self):
-        self.set_fill_color(*PRIMARIA)
-        self.rect(0, 0, self.w, 24, "F")
-        self.set_fill_color(*ACENTO)
-        self.rect(0, 24, self.w, 1.2, "F")
+        # Igual ao topo do site: fundo branco, logo à esquerda e uma linha
+        # fina embaixo.
+        self._logo(MARGEM, 5, 14)
 
-        self.set_xy(MARGEM, 8)
-        self.set_text_color(255, 255, 255)
+        self.set_xy(MARGEM + 17, 6.2)
+        self.set_text_color(*PRIMARIA)
         self.set_font("Helvetica", "B", 15)
-        self.cell(0, 8, _t(Config.EMPRESA_NOME))
+        self.cell(0, 6.5, "Verllog")
+        self.set_xy(MARGEM + 17, 12.8)
+        self.set_text_color(*TEXTO_SUAVE)
+        self.set_font("Helvetica", "", 7)
+        self.set_char_spacing(1.2)
+        self.cell(0, 4, _t("LOGÍSTICA"))
+        self.set_char_spacing(0)
         self.set_xy(MARGEM, 8)
         self.set_font("Helvetica", "", 9)
         self.cell(0, 8, _t(Config.EMPRESA_SLOGAN), align="R")
+
+        self.set_draw_color(*BORDA)
+        self.set_line_width(0.3)
+        self.line(0, 24, self.w, 24)
         self.set_y(34)
+
+    def _logo(self, x, y, lado):
+        """
+        A mesma marca do topo do site (static/img/favicon.svg), desenhada em
+        vetor: quadrado azul, V branco e ponto laranja.
+        """
+        s = lado / 40
+        self.set_fill_color(*PRIMARIA)
+        self.rect(x, y, lado, lado, "F", round_corners=True, corner_radius=11 * s)
+
+        # Traço do V com pontas e quina arredondadas, como no SVG: o fpdf2
+        # não tem estilo de ponta de linha, então põe um círculo em cada ponto.
+        pontos = [(x + 10 * s, y + 12.5 * s), (x + 20 * s, y + 27.5 * s), (x + 30 * s, y + 12.5 * s)]
+        espessura = 3.4 * s
+        self.set_draw_color(255, 255, 255)
+        self.set_fill_color(255, 255, 255)
+        self.set_line_width(espessura)
+        self.polyline(pontos)
+        for px, py in pontos:
+            self.ellipse(px - espessura / 2, py - espessura / 2, espessura, espessura, "F")
+
+        raio = 3.6 * s
+        self.set_fill_color(*ACENTO)
+        self.ellipse(x + 30 * s - raio, y + 12.5 * s - raio, 2 * raio, 2 * raio, "F")
+        self.set_line_width(0.2)
 
     def footer(self):
         self.set_y(-14)
