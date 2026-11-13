@@ -273,40 +273,44 @@ def _montar_sequencia_35(rota):
     ]
 
 
-# Horários das 4 etapas encurtadas (unidade de destino, conferência,
-# roteirização e saída para entrega), em pares (dia relativo, hora).
-_HORARIOS_SAIDA_ADIANTADA = [
-    (-1, time(14, 16)),
-    (-1, time(17, 30)),
-    (0, time(7, 10)),
-    (0, time(8, 5)),
-]
-
-
-def _adiantar_saida_para_entrega(sequencia, dia_saida):
+def _adiantar_rota(eventos, codigo, data_alvo, ordem_alvo):
     """
-    Encurta o final do cronograma para o 1º "Saiu para entrega" cair em
-    `dia_saida` (dias após o cadastro). O que vem antes da unidade de
-    destino fica igual; o que vem depois da saída segue de 2 em 2 dias.
-    Devolve (sequencia, horas_fixas por ordem). Se não couber, não mexe.
+    Refaz as datas da timeline para a etapa `ordem_alvo` cair em `data_alvo`
+    às 8h e pouco. Cada etapa até lá fica no dia normal dela ou no dia
+    encurtado (até 2 por dia, contando para trás a partir do alvo), o que
+    vier primeiro. Depois do alvo, uma etapa a cada 2 dias. Os horários
+    nunca voltam para trás. Se a data alvo vier antes do cadastro, não mexe.
     """
-    status = [etapa[0] for etapa in sequencia]
-    if "Saiu para entrega" not in status:
-        return sequencia, {}
-    indice_saida = status.index("Saiu para entrega")
-    inicio = indice_saida - len(_HORARIOS_SAIDA_ADIANTADA) + 1
-    if inicio <= 0 or sequencia[inicio - 1][3] >= dia_saida - 1:
-        return sequencia, {}
+    inicio = eventos[0]["data_hora"].date()
+    total = (data_alvo - inicio).days
+    alvo = min(ordem_alvo, len(eventos)) - 1
+    if total < 0 or alvo <= 0:
+        return eventos
 
-    nova = list(sequencia[:inicio])
-    horas = {}
-    for posicao, (relativo, hora) in enumerate(_HORARIOS_SAIDA_ADIANTADA):
-        st, local, descricao, _ = sequencia[inicio + posicao]
-        nova.append((st, local, descricao, dia_saida + relativo))
-        horas[inicio + posicao + 1] = hora
-    for passo, (st, local, descricao, _) in enumerate(sequencia[indice_saida + 1:], 1):
-        nova.append((st, local, descricao, dia_saida + 2 * passo))
-    return nova, horas
+    passo = min(0.5, total / alvo)
+    anterior = None
+    for indice, evento in enumerate(eventos):
+        normal = evento["data_hora"]
+        if indice <= alvo:
+            encurtado = total - (alvo - indice) * passo
+            if (normal - datetime.combine(inicio, time())).days <= encurtado and indice < alvo:
+                data_hora = normal
+            else:
+                dia = int(encurtado)
+                fracao = encurtado - dia
+                semente = hashlib.md5(f"{codigo}:a{indice}".encode("utf-8")).digest()
+                minutos = 8 * 60 + round(fracao * 10 * 60) + semente[0] % 40
+                data_hora = datetime.combine(inicio + timedelta(days=dia), time()) + timedelta(minutes=minutos)
+        else:
+            dia = total + 2 * (indice - alvo)
+            data_hora = datetime.combine(inicio + timedelta(days=dia), normal.time())
+
+        if anterior and data_hora <= anterior:
+            semente = hashlib.md5(f"{codigo}:b{indice}".encode("utf-8")).digest()
+            data_hora = anterior + timedelta(minutes=45 + semente[0] % 60)
+        evento["data_hora"] = data_hora
+        anterior = data_hora
+    return eventos
 
 
 def gerar_movimentacoes(
@@ -336,20 +340,11 @@ def gerar_movimentacoes(
     else:
         sequencia = _montar_sequencia_45(rota)
 
-    horas_fixas = {}
-    saida = Config.SAIU_PARA_ENTREGA_EM.get(codigo_rastreio)
-    if saida and not modelo_35_dias:
-        sequencia, horas_fixas = _adiantar_saida_para_entrega(
-            sequencia, (saida - data_cadastro).days
-        )
-
     eventos = []
     for indice, (status, local, descricao, dias) in enumerate(sequencia):
         ordem = indice + 1
         dia = data_cadastro + timedelta(days=dias)
-        if ordem in horas_fixas:
-            hora = horas_fixas[ordem]
-        elif ordem == 1 and coleta_18h:
+        if ordem == 1 and coleta_18h:
             hora = HORA_COLETA_NOITE
         else:
             hora = _hora_deterministica(codigo_rastreio, ordem)
@@ -364,6 +359,10 @@ def gerar_movimentacoes(
                 "descricao": descricao,
             }
         )
+
+    adiantar = Config.ROTAS_ADIANTADAS.get(codigo_rastreio)
+    if adiantar and not modelo_35_dias:
+        eventos = _adiantar_rota(eventos, codigo_rastreio, *adiantar)
 
     return eventos
 
