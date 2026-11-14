@@ -87,3 +87,61 @@ document.addEventListener("DOMContentLoaded", () => {
     // Código válido: deixa o formulário seguir para /rastreamento?codigo=...
   });
 });
+
+
+/* ------------------------------------------------ Copiar (página de contato)
+   Botões com data-copiar copiam o valor e mostram "Copiado!" por 2 segundos.
+   Se o navegador bloquear a área de transferência, avisa para copiar à mão.
+   -------------------------------------------------------------------- */
+document.addEventListener("DOMContentLoaded", () => {
+  const botoes = document.querySelectorAll("[data-copiar]");
+  if (!botoes.length) return;
+
+  const aviso = document.getElementById("copiar-aviso");
+
+  function copiarAntigo(texto) {
+    const campo = document.createElement("textarea");
+    campo.value = texto;
+    campo.setAttribute("readonly", "");
+    campo.style.position = "fixed";
+    campo.style.opacity = "0";
+    document.body.appendChild(campo);
+    campo.select();
+    let ok = false;
+    try { ok = document.execCommand("copy"); } catch (erro) { ok = false; }
+    document.body.removeChild(campo);
+    return ok;
+  }
+
+  botoes.forEach((botao) => {
+    const textoOriginal = botao.textContent;
+    let temporizador = null;
+
+    botao.addEventListener("click", async () => {
+      const valor = botao.dataset.copiar;
+      let ok = false;
+
+      if (navigator.clipboard && window.isSecureContext) {
+        try { await navigator.clipboard.writeText(valor); ok = true; }
+        catch (erro) { ok = copiarAntigo(valor); }
+      } else {
+        ok = copiarAntigo(valor);
+      }
+
+      if (aviso) {
+        aviso.textContent = ok
+          ? valor + " copiado."
+          : "Não foi possível copiar. Selecione e copie manualmente: " + valor;
+      }
+      if (!ok) return;
+
+      botao.textContent = "Copiado!";
+      botao.classList.add("canal__botao--ok");
+      clearTimeout(temporizador);
+      temporizador = setTimeout(() => {
+        botao.textContent = textoOriginal;
+        botao.classList.remove("canal__botao--ok");
+      }, 2000);
+    });
+  });
+});

@@ -53,6 +53,7 @@
         <a href="{{ url_for('publico.index') }}">Início</a>
         <a href="{{ url_for('publico.rastreamento') }}">Rastreamento</a>
         <a href="{{ url_for('publico.sobre') }}">Sobre nós</a>
+        <a href="{{ url_for('publico.contato') }}">Contato</a>
       </nav>
     </div>
   </header>
@@ -76,6 +77,11 @@
       <div>
         <p class="rodape__marca">{{ empresa.nome }}</p>
         <p class="rodape__slogan">{{ empresa.slogan }}</p>
+      </div>
+      <div class="rodape__contato">
+        <p class="rodape__titulo">Atendimento</p>
+        <p><a href="mailto:{{ empresa.email }}">{{ empresa.email }}</a></p>
+        <p><a href="tel:{{ empresa.telefone_link }}">{{ empresa.telefone }}</a></p>
       </div>
     </div>
     <div class="container">

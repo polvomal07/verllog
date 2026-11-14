@@ -651,3 +651,153 @@ form.bloco .exclusao__confirmar { margin: 16px 0 0; }
   .cabecalho-pagina { padding: 46px 0 42px; }
   .texto-duplo { gap: 30px; }
 }
+
+/* ==========================================================================
+   Pagina de contato
+   ========================================================================== */
+
+.canais {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 22px;
+}
+
+.canal {
+  display: flex;
+  flex-direction: column;
+  padding: 32px 30px 30px;
+  background: var(--fundo);
+  border: 1px solid var(--borda);
+  border-radius: var(--raio);
+  box-shadow: var(--sombra);
+}
+
+.canal__icone {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 52px;
+  height: 52px;
+  margin-bottom: 20px;
+  border-radius: 13px;
+  background: rgba(22, 104, 227, .09);
+  color: var(--cor-azul);
+}
+
+.canal__icone svg { width: 26px; height: 26px; }
+
+.canal__rotulo {
+  margin: 0 0 6px;
+  font-size: .76rem;
+  font-weight: 700;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--texto-suave);
+}
+
+.canal__valor {
+  margin: 0 0 6px;
+  font-size: 1.6rem;
+  font-weight: 800;
+  letter-spacing: -.02em;
+  color: var(--cor-primaria);
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+}
+
+.canal__nota { margin: 0 0 24px; font-size: .92rem; color: var(--texto-suave); }
+
+.canal__acoes { display: flex; flex-wrap: wrap; gap: 10px; margin-top: auto; }
+
+.canal__botao {
+  display: inline-block;
+  padding: 12px 22px;
+  border: 1px solid var(--cor-primaria);
+  border-radius: 10px;
+  background: var(--cor-primaria);
+  color: #fff;
+  font-family: inherit;
+  font-size: .92rem;
+  font-weight: 600;
+  line-height: 1.4;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background .15s ease, color .15s ease, border-color .15s ease;
+}
+
+.canal__botao:hover { background: var(--cor-primaria-clara); border-color: var(--cor-primaria-clara); }
+
+.canal__botao--secundario { background: var(--fundo); color: var(--cor-primaria); border-color: var(--borda); }
+
+.canal__botao--secundario:hover { background: var(--fundo-suave); border-color: var(--borda); }
+
+.canal__botao--ok,
+.canal__botao--ok:hover { color: var(--cor-sucesso); border-color: #bbf7d0; background: #f0fdf4; }
+
+.canal__botao:focus-visible { outline: 2px solid var(--cor-azul); outline-offset: 2px; }
+
+.canal__aviso { margin: 14px 0 0; min-height: 1.4em; font-size: .9rem; color: var(--texto-suave); }
+
+.passo__link {
+  display: inline-block;
+  margin-top: 12px;
+  color: var(--cor-azul);
+  font-size: .93rem;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.passo__link:hover { text-decoration: underline; }
+
+.perguntas { display: grid; gap: 12px; max-width: 780px; margin-top: 30px; }
+
+.pergunta {
+  background: var(--fundo);
+  border: 1px solid var(--borda);
+  border-radius: var(--raio);
+}
+
+.pergunta summary {
+  position: relative;
+  padding: 18px 52px 18px 22px;
+  font-weight: 600;
+  cursor: pointer;
+  list-style: none;
+}
+
+.pergunta summary::-webkit-details-marker { display: none; }
+
+/* Sinal de mais que vira menos quando a resposta esta aberta. */
+.pergunta summary::after {
+  content: "+";
+  position: absolute;
+  top: 50%;
+  right: 22px;
+  transform: translateY(-50%);
+  font-size: 1.4rem;
+  font-weight: 400;
+  line-height: 1;
+  color: var(--cor-azul);
+}
+
+.pergunta[open] summary::after { content: "\2212"; }
+
+.pergunta summary:focus-visible { outline: 2px solid var(--cor-azul); outline-offset: 2px; border-radius: var(--raio); }
+
+.pergunta p { margin: 0; padding: 0 22px 20px; color: var(--texto-suave); font-size: .95rem; }
+
+.rodape__titulo { color: #fff; font-weight: 600; }
+
+.rodape__contato a { color: rgba(255, 255, 255, .78); text-decoration: none; }
+
+.rodape__contato a:hover { color: #fff; text-decoration: underline; }
+
+@media (max-width: 720px) {
+  .canais { grid-template-columns: 1fr; gap: 14px; }
+  .canal { padding: 24px 20px; }
+  .canal__valor { font-size: 1.35rem; }
+  .canal__acoes { flex-direction: column; }
+  .canal__botao { width: 100%; padding: 14px 20px; text-align: center; }
+  .pergunta summary { padding: 16px 48px 16px 18px; }
+  .pergunta p { padding: 0 18px 18px; }
+}

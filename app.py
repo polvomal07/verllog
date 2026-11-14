@@ -103,6 +103,9 @@ def registrar_context_processors(app):
             "empresa": {
                 "nome": app.config["EMPRESA_NOME"],
                 "slogan": app.config["EMPRESA_SLOGAN"],
+                "email": app.config["EMPRESA_EMAIL"],
+                "telefone": app.config["EMPRESA_TELEFONE"],
+                "telefone_link": app.config["EMPRESA_TELEFONE_LINK"],
             },
             "ano": date.today().year,
         }

@@ -86,6 +86,10 @@ class Config:
     EMPRESA_NOME = "Verllog Logística"
     EMPRESA_SLOGAN = "Sua entrega no caminho certo."
     EMPRESA_CNPJ = "00.000.000/0001-00"
+    EMPRESA_EMAIL = "help@verllog.com"
+    EMPRESA_TELEFONE = "(92) 3199-5637"
+    # Mesmo número no formato internacional, usado no link "Ligar agora".
+    EMPRESA_TELEFONE_LINK = "+559231995637"
 
     # ------------------------------------------------------------------
     # Código de rastreamento: BR + 12 dígitos + 1 letra maiúscula

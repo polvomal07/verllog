@@ -32,6 +32,11 @@ def sobre():
     return render_template("sobre.html")
 
 
+@publico_bp.route("/contato")
+def contato():
+    return render_template("contato.html")
+
+
 @publico_bp.route("/rastreamento")
 def rastreamento():
     """
